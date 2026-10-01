@@ -4,6 +4,7 @@ import {TYPES,CARE_TYPES,escapeHTML as esc,validLocation,distance,filterCenters,
 const $=id=>document.getElementById(id);
 let state=readState(location.search),rows=[],visible=[],manifest,map,selected='',pageSize=40,viewBounds=false,internalMove=false,userMapMove=false,userPosition=null,userMarker,detailRequest=0,locationRequest=0,toastTimer;
 const markers=new Map();
+let mapDataReady=false,pendingLocation=null;
 function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,4500);}
 function controls(){ $('q').value=state.q;$('province').value=state.province;cities();$('city').value=state.city;$('program').value=state.program;document.querySelectorAll('[data-type]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.type===state.type))); }
 function cities(){const choices=[...new Set(rows.filter(r=>!state.province||r.province===state.province).map(r=>r.city).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko'));$('city').innerHTML='<option value="">전체 시군구</option>'+choices.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');}
@@ -70,30 +71,41 @@ async function setupMap(){
   naver.maps.Event.addListener(map,'idle',()=>{if(internalMove||!userMapMove||!rows.length)return;userMapMove=false;viewBounds=true;pageSize=40;render();});
   new ResizeObserver(()=>{naver.maps.Event.trigger(map,'resize');if(rows.length&&viewBounds)render();}).observe($('map'));
 }
-async function locate(){
+function applyPendingLocation(){
+  if(!mapDataReady||!pendingLocation)return;
+  const {point,request}=pendingLocation;pendingLocation=null;
+  if(request!==locationRequest)return;
+  userPosition=point;state.province='';state.city='';controls();
+  if(map){internal(()=>setView(point,14));if(userMarker)userMarker.setMap(null);userMarker=new naver.maps.Marker({map,position:latLng(point),title:'현재 위치',zIndex:5000,icon:{content:'<div class="current-position-pin" aria-label="현재 위치"></div>',anchor:new naver.maps.Point(11,11)}});viewBounds=true;}
+  render();toast('현재 위치를 기준으로 센터를 찾았습니다.');
+}
+async function locate(initial=false){
   const request=++locationRequest;$('locate').disabled=true;$('locate').textContent='위치 확인 중…';CareLocation.hideNotice();
   try{
-    const point=await CareLocation.request({isCurrent:()=>request===locationRequest});
+    // 초기 권한 요청과 조회를 공유한다. 이미 허용된 경우에도 즉시 위치를 읽는다.
+    const initialResult=initial?await window.CareInitialLocation:null;
+    if(request!==locationRequest)return;
+    if(initialResult?.error)throw initialResult.error;
+    const point=initialResult?.point||await CareLocation.request({isCurrent:()=>request===locationRequest});
     if(request!==locationRequest)return;
     if(!validLocation(point)){toast('국내 지역을 선택해 센터를 찾아주세요.');return;}
-    userPosition=point;state.province='';state.city='';controls();
-    if(map){internal(()=>setView(point,14));if(userMarker)userMarker.setMap(null);userMarker=new naver.maps.Marker({map,position:latLng(point),title:'현재 위치',zIndex:5000,icon:{content:'<div class="current-position-pin" aria-label="현재 위치"></div>',anchor:new naver.maps.Point(11,11)}});viewBounds=true;}
-    render();toast('현재 위치를 기준으로 센터를 찾았습니다.');
+    pendingLocation={point,request};applyPendingLocation();
   }catch(error){if(request===locationRequest)CareLocation.showNotice(error,()=>locate());}
   finally{$('locate').disabled=false;$('locate').innerHTML='◎ <span>내 위치</span>';}
 }
 async function start(){
-  const initialRequest=locationRequest;const useInitialLocation=!state.location&&!state.center&&!state.q&&!state.province&&!state.city&&!state.program;
+  const useInitialLocation=!state.location&&!state.center&&!state.q&&!state.province&&!state.city&&!state.program;
+  if(useInitialLocation)void locate(true);
   try{manifest=await loadJSON('data/dementia/manifest.json');rows=await loadJSON(`data/dementia/${manifest.file}?v=${manifest.revision}`);if(rows.length!==manifest.count||new Set(rows.map(r=>r.id)).size!==rows.length)throw new Error('자료가 갱신 중입니다. 잠시 후 다시 시도해 주세요.');
     $('province').innerHTML='<option value="">전국 시도</option>'+[...new Set(rows.map(r=>r.province))].sort((a,b)=>a.localeCompare(b,'ko')).map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
-    controls();await setupMap();viewBounds=!!state.location&&state.scope!=='all';if(!state.location)fitRows(filterCenters(rows,state));selected=state.center;render();if(state.center)openDetail(state.center);else if(useInitialLocation&&initialRequest===locationRequest)void locate();
+    controls();await setupMap();viewBounds=!!state.location&&state.scope!=='all';if(!state.location)fitRows(filterCenters(rows,state));selected=state.center;render();mapDataReady=true;if(state.center)openDetail(state.center);else applyPendingLocation();
   }catch(error){$('scopeNote').textContent='자료를 불러오지 못했습니다.';$('results').innerHTML=`<div class="empty">${esc(error.message)}<br><button id="retry">다시 시도</button></div>`;$('retry').onclick=()=>location.reload();}
 }
 $('searchForm').onsubmit=e=>{e.preventDefault();search();};
 $('province').onchange=()=>{state.province=$('province').value;state.city='';cities();search();};$('city').onchange=search;$('program').onchange=search;
 document.querySelectorAll('[data-type]').forEach(b=>b.onclick=()=>{state.type=b.dataset.type;search();});
 $('reset').onclick=reset;$('fit').onclick=()=>{locationRequest++;viewBounds=false;fitRows(filterCenters(rows,state));render();};$('searchArea').onclick=()=>{locationRequest++;viewBounds=true;render();};
-$('locate').onclick=locate;$('shareMap').onclick=()=>share(stateURL({...state,scope:viewBounds?'map':'all',location:currentPoint(),zoom:map?.getZoom()},location.origin),'치매안심 지도');
+$('locate').onclick=()=>locate();$('shareMap').onclick=()=>share(stateURL({...state,scope:viewBounds?'map':'all',location:currentPoint(),zoom:map?.getZoom()},location.origin),'치매안심 지도');
 $('closeDetail').onclick=closeDetail;$('detailDialog').addEventListener('cancel',e=>{e.preventDefault();closeDetail();});
 $('detailDialog').addEventListener('click',e=>{if(e.target===$('detailDialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeDetail();}});
 for(const id of ['guideOpen','helpOpen'])$(id).onclick=()=>$('guideDialog').showModal();$('closeGuide').onclick=()=>$('guideDialog').close();
