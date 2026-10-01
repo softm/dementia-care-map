@@ -1,0 +1,53 @@
+name: Build and sync dementia site
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 22 * * *' # 매일 07:17 Asia/Seoul. MASTER의 새 데이터도 함께 배포한다.
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: dementia-pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: site
+      - uses: actions/checkout@v4
+        with:
+          repository: softm/homecare-nationwide-care-services-map
+          ref: main
+          path: master
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Copy complete MASTER snapshot and verify hashes
+        working-directory: site
+        run: python3 scripts/sync_data.py --master ../master
+      - name: Verify and build
+        working-directory: site
+        run: npm run check && npm run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish static site
+        id: deployment
+        uses: actions/deploy-pages@v4
