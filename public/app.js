@@ -1,5 +1,5 @@
 import {icon as uiIcon,labelButton,enhanceDetail} from './ui-icons.js';
-import {mountAd,syncAds} from './care-ads.js';
+import {mountAd,syncAds} from './care-ads.js?v=20261001-bottom';
 import './map-marker-placement.js';
 import './map-marker-labels.js';
 import {TYPES,CARE_TYPES,escapeHTML as esc,validLocation,distance,filterCenters,readState,stateURL,centerURL,careURL,safeWebsite,loadJSON} from './core.js?v=20261001-modes-ads';

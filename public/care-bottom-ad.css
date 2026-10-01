@@ -1,0 +1,11 @@
+/* SOFTM-BOTTOM-AD 날짜:20261001 : 광고 높이만큼 탐색 공간을 확보하고 원래 배너 크기를 보존한다. */
+.bottom-ad{position:fixed;z-index:180;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,960px);display:flex;flex-direction:column;align-items:center;color:#244e43;padding-bottom:env(safe-area-inset-bottom);background:linear-gradient(transparent 28px,#fff 28px)}
+.bottom-ad-toggle{height:28px;min-height:28px;display:flex;align-items:center;gap:10px;padding:0 13px;border:1px solid #c6d8d0;border-bottom:0;border-radius:8px 8px 0 0;background:#fff;color:#466459;font:inherit;font-size:11px;cursor:pointer;box-shadow:0 -2px 8px #173b3714}
+.bottom-ad-toggle:after{content:'';width:7px;height:7px;margin-top:-4px;border:solid currentColor;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.bottom-ad[data-expanded=false] .bottom-ad-toggle:after{margin-top:4px;transform:rotate(225deg)}
+#bottomAdPanel{width:100%;border-top:1px solid #c6d8d0;background:white;box-shadow:0 -3px 14px #173b371b}
+#bottomAdPanel[hidden]{display:none}
+#bottomAdHost{width:100%}#bottomAdHost .care-ad{border:0;border-radius:0;padding:4px 0 8px}#bottomAdHost .care-ad-body{min-height:100px}#bottomAdHost .care-ad-label{margin-bottom:2px}
+body .workspace{height:calc(100dvh - 64px - var(--bottom-ad-space,0px))}
+@media(max-width:760px){body .workspace{height:calc(100dvh - 60px - var(--bottom-ad-space,0px))}body[data-care-mode=map] .workspace{overflow:auto;flex-shrink:0}body[data-care-mode=map] .results{flex-basis:14dvh}}
+.toast{bottom:calc(var(--bottom-ad-space,0px) + 12px)}

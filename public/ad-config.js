@@ -3,6 +3,7 @@ export const AD_CONFIG=Object.freeze({
  media:'NyJ',domain:'dementia.designboard.net',enabled:true,
  script:'https://t1.kakaocdn.net/kas/static/ba.min.js',
  placements:{
+  bottom:{desktop:{unit:'DAN-rfoZb8eMWWYs5Q1D',width:728,height:90},mobile:{unit:'DAN-BbGFyX8or3bjm3FR',width:320,height:100}},
   map:{desktop:{unit:'DAN-qM3KYPOwePM7kwpl',width:728,height:90},mobile:{unit:'DAN-V1vn22LSCYpNlOq1',width:320,height:100}},
   list:{desktop:{unit:'DAN-isDQDeChPru8i1K6',width:728,height:90},mobile:{unit:'DAN-iLTrwoG83KVVUYQV',width:320,height:100}},
   inline:{mobile:{unit:'DAN-ziZ3GlYni7QBIMny',width:320,height:100}},
