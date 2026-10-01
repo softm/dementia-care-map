@@ -7,3 +7,6 @@
 
 .cluster-wrap{border:0;background:transparent}.cluster{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;background:#17695be8;color:white;border:5px solid #d8e9dcbf;box-shadow:0 2px 8px #28473230;font-size:13px;font-weight:700}
 @media(max-height:740px) and (min-width:761px){.workspace{min-height:0}.intro{padding:17px 24px 13px}.intro h1{font-size:25px;line-height:1.15;margin:7px 0}.intro p{font-size:11px;line-height:1.4}.search-panel{padding-top:12px;padding-bottom:9px}.searchbox input{padding:11px 0}.region-row{margin:7px 0 10px}.region-row select{padding:8px}.filter-bottom{margin-top:8px}}
+
+/* 돌봄한눈과 같은 현재 위치 마커 */
+.current-position-pin{width:22px;height:22px;border:3px solid white;border-radius:50%;background:#297bd7;box-shadow:0 0 0 8px #297bd733,0 2px 6px #0003}.map-pin{padding:0;cursor:pointer}.map-pin:focus-visible{outline:3px solid #297bd7;outline-offset:4px}
