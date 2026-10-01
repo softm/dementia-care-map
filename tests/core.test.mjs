@@ -10,3 +10,9 @@ test('공유 검색 상태 왕복과 좌표·유형 검증',()=>{const state={q:
 test('돌봄한눈 링크는 기존 유형·지도 공유 규격을 유지',()=>{const u=careURL(rows[0],'daycare');assert.equal(u.origin,'https://homecare.designboard.net');assert.equal(u.searchParams.get('type'),'daycare');assert.equal(u.searchParams.get('share'),'1');assert.equal(u.searchParams.get('lat'),'37.57');assert.equal(careURL(rows[1],'facility').searchParams.get('p'),'서울특별시');});
 test('거리 결측과 안전한 원문 표시',()=>{assert.equal(distance(rows[0].location,rows[0].location),0);assert.equal(distance(null,rows[0].location),Infinity);assert.equal(safeWebsite('javascript:alert(1)'),null);assert.match(escapeHTML('<script>'),/&lt;script&gt;/);});
 test('gzip 자료와 압축 해제 응답·캐시·실패 후 재시도',async()=>{const old=globalThis.fetch;let calls=0;try{globalThis.fetch=async()=>{calls++;if(calls===1)return new Response('',{status:503});return new Response(JSON.stringify({ok:true}));};await assert.rejects(loadJSON('/retry-test.json'));assert.deepEqual(await loadJSON('/retry-test.json'),{ok:true});assert.deepEqual(await loadJSON('/retry-test.json'),{ok:true});assert.equal(calls,2);const {gzipSync}=await import('node:zlib');globalThis.fetch=async()=>new Response(gzipSync(JSON.stringify([1,2])));assert.deepEqual(await loadJSON('/gzip-test.json.gz'),[1,2]);}finally{globalThis.fetch=old;}});
+
+test('목록 모드 공유 URL 복원과 잘못된 모드의 지도 기본값',()=>{
+ const state=readState('?mode=list&q=광명&type=center');
+ assert.equal(state.mode,'list');assert.equal(readState(stateURL(state,'https://dementia.designboard.net').search).mode,'list');
+ assert.equal(readState('?mode=invalid').mode,'map');
+});
