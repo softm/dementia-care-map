@@ -1,3 +1,4 @@
+import {initializeStitchUI} from './stitch-ui.js';
 import {icon as uiIcon,labelButton,enhanceDetail} from './ui-icons.js';
 import {mountAd,syncAds} from './care-ads.js?v=20261001-bottom';
 import './map-marker-placement.js';
@@ -168,9 +169,10 @@ async function setMode(next){
  if(!isList()&&!userPosition&&!state.location&&!state.q&&!state.province&&!state.city&&!state.center)void locate();
 }
 function initializeUI(){
+ initializeStitchUI();
  for(const [id,name,label] of [['locate','locate','내 위치'],['fit','grid','전체 결과'],['shareMap','share','지도 공유'],['reset','reset','초기화'],['listLocate','locate','내 주변 지도'],['shareList','share','검색 공유'],['closeDetail','close',''],['closeGuide','close',''],['guideOpen','info','이용 안내'],['helpOpen','chevron','']])labelButton(id,name,label);
  document.querySelector('.searchbox > span').innerHTML=uiIcon('search');document.querySelector('.searchbox > button').innerHTML=uiIcon('search');
- document.querySelectorAll('[data-mode]').forEach(button=>{button.innerHTML=uiIcon(button.dataset.mode)+`<span>${button.dataset.mode==='list'?'목록':'지도'}</span>`;button.onclick=()=>setMode(button.dataset.mode);});
+ document.querySelectorAll('[data-mode]').forEach(button=>{button.innerHTML=uiIcon(button.dataset.mode)+`<span>${button.dataset.mode==='list'?'목록 보기':'지도 보기'}</span>`;button.onclick=()=>setMode(button.dataset.mode);});
  $('listLocate').onclick=async()=>{await setMode('map');if(userPosition||state.location||state.q||state.province||state.city)void locate();};
  $('shareList').onclick=()=>share(stateURL({...state,scope:'all',location:null},location.origin),'치매안심 검색 결과');
  syncModeUI();
