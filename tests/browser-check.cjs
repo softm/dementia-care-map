@@ -41,10 +41,37 @@ const origin=process.env.TEST_ORIGIN||'http://localhost:3100';
     const denied=await browser.newContext({viewport:{width:390,height:844}});await denied.addInitScript(()=>{navigator.geolocation.getCurrentPosition=(_ok,fail)=>fail({code:1});});const deniedPage=await denied.newPage();await deniedPage.goto(origin);await deniedPage.locator('.center-card').first().waitFor();await deniedPage.locator('.care-location-notice[open]').waitFor();assert.match(await deniedPage.locator('.care-location-notice strong').innerText(),/차단/);await deniedPage.locator('[data-location-search]').click();assert.equal(await deniedPage.locator('.care-location-notice[open]').count(),0);await denied.close();checks.push('위치 권한 거부 안내');
     const delayed=await browser.newContext({viewport:{width:390,height:844}});
     await delayed.addInitScript(()=>{window.geoCalls=0;navigator.geolocation.getCurrentPosition=ok=>{window.geoCalls++;window.deliverLocation=()=>ok({coords:{latitude:37.4785,longitude:126.8644}});};});
-    const late=await delayed.newPage();await late.goto(origin);await late.waitForFunction(()=>!!window.deliverLocation);
+    const late=await delayed.newPage();await late.goto(origin);await late.waitForFunction(()=>!!window.deliverLocation&&document.querySelector('#count').textContent!=='—'&&document.querySelector('#map img'));
     await late.locator('#q').fill('광명');await late.locator('#searchForm').evaluate(f=>f.requestSubmit());const searchURL=late.url();await late.evaluate(()=>window.deliverLocation());await late.waitForFunction(()=>!document.querySelector('#locate').disabled);assert.equal(late.url(),searchURL);assert.equal(await late.locator('#q').inputValue(),'광명');checks.push('늦은 위치 응답이 검색을 덮지 않음');
-    await late.goto(origin+'/?lat=37.5&lng=127&z=13');await late.waitForFunction(()=>document.querySelector('#count').textContent!=='—'&&document.querySelector('#map img'));assert.equal(await late.evaluate(()=>window.geoCalls),0);assert.equal(Number(new URL(late.url()).searchParams.get('lat')),37.5);checks.push('공유 지도 위치 보존·위치 자동 요청 제외');
+    await late.goto(origin+'/?lat=37.5&lng=127&z=13');await late.waitForFunction(()=>document.querySelector('#count').textContent!=='—'&&document.querySelector('#map img'));await late.evaluate(()=>window.deliverLocation?.());assert.equal(Number(new URL(late.url()).searchParams.get('lat')),37.5);checks.push('초기 권한 허용 뒤에도 공유 지도 위치 보존');
     const mapBox=await late.locator('#map').boundingBox();await late.mouse.move(mapBox.x+mapBox.width/2,mapBox.y+mapBox.height/2);await late.mouse.down();await late.mouse.move(mapBox.x+mapBox.width/2+70,mapBox.y+mapBox.height/2+20,{steps:8});await late.mouse.up();await late.waitForFunction(()=>Number(new URL(location.href).searchParams.get('lat'))!==37.5);assert.match(await late.locator('#scopeNote').innerText(),/현재 지도 영역/);checks.push('모바일 지도 이동 후 영역 재검색');await delayed.close();
+    for(const permission of ['prompt','granted','denied']){
+      const startup=await browser.newContext({viewport:{width:390,height:844}});
+      await startup.addInitScript(permission=>{
+        navigator.permissions.query=async()=>({state:permission,addEventListener(){}});
+        window.geoCalls=0;
+        navigator.geolocation.getCurrentPosition=(ok,fail)=>{window.geoCalls++;if(permission==='denied')fail({code:1});else window.deliverLocation=()=>ok({coords:{latitude:37.4785,longitude:126.8644}});};
+      },permission);
+      const early=await startup.newPage();early.on('pageerror',e=>errors.push(e.message));let release;
+      const gate=new Promise(resolve=>release=resolve);
+      await early.route('**/data/dementia/manifest.json',async route=>{await gate;await route.continue();});
+      await early.goto(origin);await early.waitForFunction(()=>window.geoCalls===1);
+      assert.equal(await early.locator('#count').innerText(),'—');assert.equal(await early.locator('#map img').count(),0);
+      if(permission==='denied'){
+        await early.locator('.care-location-notice[open]').waitFor();assert.match(await early.locator('.care-location-notice strong').innerText(),/차단/);
+        await early.screenshot({path:'test-results/mobile-location-denied.png'});
+        await early.locator('[data-location-search]').click();
+      }else await early.evaluate(()=>window.deliverLocation());
+      release();await early.waitForFunction(()=>document.querySelector('#count').textContent!=='—');
+      if(permission!=='denied'){
+        await early.waitForFunction(()=>document.querySelector('.current-position-pin')&&new URL(location.href).searchParams.get('lat')==='37.478500');
+        assert.equal(new URL(early.url()).searchParams.get('scope'),'map');assert.match(await early.locator('#sortLabel').innerText(),/직선거리/);
+        await early.waitForFunction(()=>[...document.querySelectorAll('#map img')].some(i=>/map.naver.net/.test(i.src)&&i.naturalWidth>0));
+        await early.screenshot({path:`test-results/mobile-location-${permission}.png`});
+      }
+      assert.equal(await early.evaluate(()=>window.geoCalls),1);await startup.close();
+    }
+    checks.push('권한 미결정·허용·차단 모두 데이터 로딩 전 요청, 중복 없음, 먼저 받은 위치로 지도 조회');
     if(process.env.MASTER_ORIGIN){
       const master=await context.newPage();const target='https://dementia.designboard.net/';
       await context.route(target+'**',route=>route.fulfill({status:200,contentType:'text/html',body:'연결 검증'}));
