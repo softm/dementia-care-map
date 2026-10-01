@@ -1,4 +1,4 @@
-import {initializeStitchUI} from './stitch-ui.js';
+import {initializeStitchUI,syncStitchLayout} from './stitch-ui.js?v=20261001-update';
 import {icon as uiIcon,labelButton,enhanceDetail} from './ui-icons.js';
 import {mountAd,syncAds} from './care-ads.js?v=20261001-bottom';
 import './map-marker-placement.js';
@@ -41,6 +41,7 @@ function renderResults(markup){
   const template=document.createElement('template');template.innerHTML=markup;let count=0;
   for(const child of [...template.content.children]){if(child.matches('.center-card'))count++;if(ad&&count<=6)host.insertBefore(child,ad);else host.append(child);}
 }
+function revealMobileResults(){if(!isList()&&matchMedia('(max-width:760px)').matches&&!document.body.classList.contains('list-expanded'))$('mobileToggle').click();}
 function render(){
   const base=userPosition||(viewBounds?currentPoint():null);
   visible=filterCenters(rows,state,!isList()&&viewBounds?viewport():null);
@@ -49,7 +50,7 @@ function render(){
   const missing=visible.filter(r=>!validLocation(r.location)).length;
   $('scopeNote').textContent=(!isList()&&viewBounds?'현재 지도 영역의 결과입니다.':'선택한 조건의 전체 결과입니다.')+(missing?` 위치 미확인 ${missing}곳은 목록에서 확인하세요.`:'')+(state.program?' 원자료에 명시된 프로그램 기준입니다.':'');
   $('mapLabel').textContent=[state.province||'전국',state.city,TYPES[state.type]||'치매센터'].filter(Boolean).join(' ');
-  if(!visible.length){renderResults('<div class="empty"><strong>찾은 센터가 없습니다.</strong><br>검색어나 지역·지도 범위를 넓혀 보세요.<br><button id="emptyReset">전체 센터 보기</button></div>');$('emptyReset').onclick=reset;}
+  if(!visible.length){renderResults('<div class="empty"><strong>찾은 센터가 없습니다.</strong><br>검색어나 지역·지도 범위를 넓혀 보세요.<br><button id="emptyReset">전체 센터 보기</button></div>');$('emptyReset').onclick=reset;revealMobileResults();}
   else{
     renderResults(visible.slice(0,pageSize).map((r,index)=>{const d=base?distance(base,r.location):Infinity;return `<article class="center-card ${r.id===selected?'selected':''}" data-id="${esc(r.id)}"><button type="button" class="card-open" aria-label="${esc(r.name)} 상세정보"><div class="card-heading"><span class="card-rank">${index+1}</span><h3>${esc(r.name)}</h3>${uiIcon('chevron')}</div><div class="card-top"><span class="badge ${r.type}">${TYPES[r.type]}</span><span class="distance">${Number.isFinite(d)?`직선 ${d.toFixed(1)}km`:!r.location?'위치 미확인':''}</span></div><p class="card-address">${uiIcon('pin')}<span>${esc(r.address)}</span></p><div class="tags">${r.programTags.length?r.programTags.map(t=>`<span>${esc(t)}</span>`).join(''):'<span>프로그램 미확인 · 상세에서 연락처 확인</span>'}</div></button><div class="card-actions"><button type="button" data-card-map="${esc(r.id)}">${uiIcon('map')}지도에서 보기</button><button type="button" data-card-detail="${esc(r.id)}">${uiIcon('info')}상세정보</button></div></article>`;}).join('')+(visible.length>pageSize?`<button class="more" id="more">센터 더 보기 (${Math.min(pageSize,visible.length)} / ${visible.length})</button>`:''));
     $('results').querySelectorAll('.center-card').forEach(card=>card.onclick=async event=>{if(event.target.closest('[data-card-map]'))await setMode('map');openDetail(card.dataset.id,true);});
@@ -127,7 +128,7 @@ async function start(){
   try{manifest=await loadJSON('data/dementia/manifest.json');rows=await loadJSON(`data/dementia/${manifest.file}?v=${manifest.revision}`);if(rows.length!==manifest.count||new Set(rows.map(r=>r.id)).size!==rows.length)throw new Error('자료가 갱신 중입니다. 잠시 후 다시 시도해 주세요.');
     $('province').innerHTML='<option value="">전국 시도</option>'+[...new Set(rows.map(r=>r.province))].sort((a,b)=>a.localeCompare(b,'ko')).map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
     controls();if(!isList())await setupMap();viewBounds=!isList()&&!!state.location&&state.scope!=='all';if(!state.location)fitRows(filterCenters(rows,state));selected=state.center;render();mapDataReady=true;if(state.center)openDetail(state.center);else applyPendingLocation();
-  }catch(error){$('scopeNote').textContent='자료를 불러오지 못했습니다.';$('results').innerHTML=`<div class="empty">${esc(error.message)}<br><button id="retry">다시 시도</button></div>`;$('retry').onclick=()=>location.reload();}
+  }catch(error){$('scopeNote').textContent='자료를 불러오지 못했습니다.';$('results').innerHTML=`<div class="empty">${esc(error.message)}<br><button id="retry">다시 시도</button></div>`;$('retry').onclick=()=>location.reload();revealMobileResults();}
 }
 $('searchForm').onsubmit=e=>{e.preventDefault();search();};
 $('province').onchange=()=>{state.province=$('province').value;state.city='';cities();search();};$('city').onchange=search;$('program').onchange=search;
@@ -138,14 +139,14 @@ $('locate').onclick=()=>locate();$('shareMap').onclick=()=>share(stateURL({...st
 $('closeDetail').onclick=closeDetail;$('detailDialog').addEventListener('cancel',e=>{e.preventDefault();closeDetail();});
 $('detailDialog').addEventListener('click',e=>{if(e.target===$('detailDialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeDetail();}});
 for(const id of ['guideOpen','helpOpen'])$(id).onclick=()=>$('guideDialog').showModal();$('closeGuide').onclick=()=>$('guideDialog').close();
-$('mobileToggle').onclick=()=>{const expanded=document.body.classList.toggle('list-expanded');$('mobileToggle').textContent=expanded?'지도 크게 보기 ↓':'목록 크게 보기 ↑';if(map)internal(()=>naver.maps.Event.trigger(map,'resize'));};
+$('mobileToggle').onclick=()=>{const expanded=document.body.classList.toggle('list-expanded');$('mobileToggle').setAttribute('aria-expanded',String(expanded));$('mobileToggle').textContent=expanded?'지도 크게 보기 ↓':'목록 크게 보기 ↑';if(map)internal(()=>naver.maps.Event.trigger(map,'resize'));};
 window.addEventListener('popstate',async()=>{locationRequest++;detailRequest++;state=readState(location.search);selected=state.center;syncModeUI();if(!isList())await setupMap();controls();if(state.location&&map&&!isList())internal(()=>setView(state.location,state.zoom));viewBounds=!isList()&&!!state.location&&state.scope!=='all';render();if(state.center)openDetail(state.center);else if($('detailDialog').open)$('detailDialog').close();});
 initializeUI();start();
 // SOFTM-DEMENTIA-APP END
 
 // SOFTM-DEMENTIA-MODES START 날짜:20261001 : 돌봄한눈의 전체 목록·지도 탐색 전환을 센터 데이터에 연결.
 function syncModeUI(){
- document.body.dataset.careMode=isList()?'list':'map';
+ document.body.dataset.careMode=isList()?'list':'map';syncStitchLayout();
  document.querySelectorAll('[data-mode]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.mode===state.mode)));
  $('listSummary').hidden=!isList();
 }
