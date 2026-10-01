@@ -23,7 +23,7 @@ npm run serve
 - 이 프로젝트 `scripts/sync_data.py`: MASTER의 `data/` 아래 공개 JSON·gzip JSON 전체를 동일한 경로로 복사하고 파일별 SHA-256을 검증.
 - 이 프로젝트의 `data/`, `dist/`는 생성물이며 Git에 넣지 않습니다. 데이터 편집은 MASTER에서만 합니다.
 
-`data/care`, `data/care-photos`, `data/hira`, `data/nhis`, `data/dementia`를 전부 동기화합니다. MASTER에 새 최상위 데이터 디렉터리가 생기면 동기화를 실패시켜 공개 범위를 확인한 뒤 허용 목록을 확장하도록 합니다. 기존 디렉터리의 새 파일과 삭제는 자동 반영됩니다. 원본·비밀키·서버 코드는 복사하지 않습니다. 모든 JSON 요청은 치매안심 자신의 Origin으로 제한됩니다.
+`data/care`, `data/care-photos`, `data/hira`, `data/nhis`, `data/dementia`를 전부 동기화합니다. MASTER에 새 최상위 데이터 디렉터리가 생기면 동기화를 실패시켜 공개 범위를 확인한 뒤 허용 목록을 확장하도록 합니다. 기존 디렉터리의 새 파일과 삭제는 자동 반영됩니다. 원본·비밀키·서버 코드는 복사하지 않습니다. 센터 데이터 JSON 요청은 치매안심 자신의 Origin으로 제한됩니다. 데이터 현황 페이지의 실행 기록만 GitHub 공개 API에서 조회합니다.
 
 초기 화면은 치매 매니페스트와 압축 검색 인덱스 두 개만 가져옵니다. 센터 상세는 선택한 센터 JSON 한 개만 요청합니다. 장기요양기관·사진 데이터는 배포 산출물에 있지만 초기 브라우저에서 로딩하지 않습니다. 첫 버전의 주변 기관 탐색은 센터 좌표를 전달해 돌봄한눈으로 연결합니다.
 
@@ -48,3 +48,9 @@ MASTER에서 주 1회 및 수동으로 두 공식 데이터가 갱신됩니다. 
 `npm run check`는 검색/좌표/공유/안전한 링크 테스트, 데이터 동기화 실패 시 보존 테스트, MASTER와 모든 파일의 해시 일치·센터 상세 참조를 확인합니다. MASTER의 `tests/test_dementia.py`는 두 필수 출처·중복 병합·분소 구분·좌표 결측·최신 주소와 옛 좌표의 혼합 방지를 검사합니다. 실제 브라우저의 검색·필터·마커·상세·현재위치·모바일·공유 검증은 `tests/browser-check.cjs`를 사용합니다.
 
 브라우저 검사는 Chrome과 Playwright가 있는 환경에서 `node tests/browser-check.cjs`로 실행합니다. Playwright가 없다면 테스트용으로 `npm install --no-save --package-lock=false playwright`를 사용하거나 `PLAYWRIGHT_MODULE`에 설치 경로를 지정하세요. 실행 중인 돌봄한눈 주소를 `MASTER_ORIGIN=http://127.0.0.1:3101`로 지정하면 실제 메뉴의 반대 방향 지역 전달도 검사합니다. 캡처와 결과는 Git에서 제외되는 `test-results/`에 저장됩니다.
+
+## 데이터 현황
+
+`data-status.html`은 치매 매니페스트의 출처별 건수·기준일·통합 결과와 동기화 원본 버전을 표시합니다. 이 페이지에서만 GitHub 공개 Actions API로 수집 및 배포 최근 실행 5건을 조회하며, 보이는 동안 90초마다 갱신합니다. API 조회 실패는 자료 현황과 별도로 표시합니다. 자료 기준일은 수집 실행 시각과 구분합니다.
+
+현황 페이지의 실제 브라우저 검증은 `node tests/data-status-browser.cjs`로 실행합니다. 기존 브라우저 검사와 동일하게 `PLAYWRIGHT_MODULE`과 `TEST_ORIGIN`을 지정할 수 있습니다.
