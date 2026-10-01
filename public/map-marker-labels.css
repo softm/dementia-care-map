@@ -1,0 +1,12 @@
+/* 돌봄한눈의 화면 밀도·16/18단계 정보 공개·충돌 회피를 치매센터 정보에 적용. */
+.named-marker{position:relative;width:30px;height:30px}.named-marker.active{width:43px;height:43px}
+.marker-name{display:none;position:absolute;left:50%;bottom:calc(100% + 16px);transform:translateX(-50%);width:max-content;max-width:160px;padding:5px 8px;border:1px solid #b8cec5;border-radius:7px;background:white;color:var(--ink);font-size:12px;font-weight:700;line-height:1.4;text-align:center;white-space:normal;overflow-wrap:anywhere;box-shadow:0 2px 6px #163f2c26;cursor:pointer}
+.marker-name.care-label-visible,.marker-name.care-label-measure{display:block}.marker-name.care-label-measure{visibility:hidden;pointer-events:none}
+.care-marker-title{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}.care-marker-fact{display:none}
+.marker-name.care-label-context{width:220px;max-width:220px;padding:8px 10px;text-align:left}
+.care-label-context .care-marker-overview{display:block;margin-top:4px;color:var(--green);font-size:11px;font-weight:600}
+.care-label-insight .care-marker-detail{display:block;margin-top:4px;padding-top:4px;border-top:1px solid var(--line);font-size:11px;font-weight:500;color:var(--muted)}
+.named-marker.active .marker-name{border:2px solid var(--green)}
+.care-compact-markers .named-marker:not(.active) .map-pin{width:14px;height:14px;position:absolute;left:8px;top:16px;border:2px solid white;border-radius:50%;transform:none;box-shadow:0 1px 3px #163f2c40}
+.care-compact-markers .named-marker:not(.active) .map-pin b{display:none}
+@media(max-width:760px){.marker-name.care-label-context{width:200px;max-width:200px}}

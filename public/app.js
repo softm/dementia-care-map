@@ -1,3 +1,5 @@
+import './map-marker-placement.js';
+import './map-marker-labels.js';
 import {TYPES,CARE_TYPES,escapeHTML as esc,validLocation,distance,filterCenters,readState,stateURL,centerURL,careURL,safeWebsite,loadJSON} from './core.js';
 
 // SOFTM-DEMENTIA-APP START 날짜:20261001 : 데이터·현재 검색·선택 센터 상태를 분리해 늦은 응답이 화면을 덮지 않도록 한다.
@@ -16,8 +18,18 @@ function internal(fn){internalMove=true;userMapMove=false;try{fn();}finally{inte
 const latLng=point=>new naver.maps.LatLng(point.lat,point.lng);
 function setView(point,zoom){map.setCenter(latLng(point));map.setZoom(zoom,false);}
 function fitRows(list){const points=list.filter(r=>validLocation(r.location));if(!map||!points.length)return;const bounds=new naver.maps.LatLngBounds();points.forEach(r=>bounds.extend(latLng(r.location)));internal(()=>{map.fitBounds(bounds,{top:70,right:55,bottom:60,left:55});if(map.getZoom()>13)map.setZoom(13,false);});}
-function icon(row,rank){const active=row.id===selected;return {content:`<button type="button" aria-label="${esc(row.name)}" class="map-pin ${row.type} ${active?'active':''}"><b>${rank}</b></button>`,size:new naver.maps.Size(active?43:30,active?43:30),anchor:new naver.maps.Point(active?21:15,active?43:30)};}
-function updateMarkers(list){if(!map)return;const ids=new Set(list.map(r=>r.id));for(const [id,marker] of markers){if(!ids.has(id)){marker.setMap(null);naver.maps.Event.clearInstanceListeners(marker);markers.delete(id);}}list.forEach((row,i)=>{if(!validLocation(row.location))return;let marker=markers.get(row.id);if(!marker){marker=new naver.maps.Marker({map,position:latLng(row.location),icon:icon(row,i+1),title:row.name});naver.maps.Event.addListener(marker,'click',()=>openDetail(row.id,true));markers.set(row.id,marker);}else marker.setIcon(icon(row,i+1));marker.setZIndex(row.id===selected?1000:1);});}
+function icon(row,rank){
+  const active=row.id===selected;
+  const overview=[TYPES[row.type],row.province,row.city].filter(Boolean).join(' · ');
+  const detail=row.programTags.length?row.programTags.join(' · '):'프로그램 미확인';
+  return {content:`<div class="named-marker ${active?'active':''}" data-marker-id="${esc(row.id)}"><div class="marker-name"><span class="care-marker-title">${esc(row.name)}</span><span class="care-marker-fact care-marker-overview">${esc(overview)}</span><span class="care-marker-fact care-marker-detail">${esc(detail)}</span></div><button type="button" aria-label="${esc(row.name)}" class="map-pin ${row.type} ${active?'active':''}"><b>${rank}</b></button></div>`,size:new naver.maps.Size(active?43:30,active?43:30),anchor:new naver.maps.Point(active?21:15,active?43:30)};
+}
+function updateMarkers(list){if(!map)return;
+  const host=$('map'),bounds=viewport();
+  const count=list.filter(row=>validLocation(row.location)&&row.location.lat>=bounds.south&&row.location.lat<=bounds.north&&row.location.lng>=bounds.west&&row.location.lng<=bounds.east).length;
+  const limit=Math.max(12,Math.min(80,Math.floor(host.clientWidth*host.clientHeight/9000)));
+  host.classList.toggle('care-compact-markers',count>limit);
+  const ids=new Set(list.map(r=>r.id));for(const [id,marker] of markers){if(!ids.has(id)){marker.setMap(null);naver.maps.Event.clearInstanceListeners(marker);markers.delete(id);}}list.forEach((row,i)=>{if(!validLocation(row.location))return;let marker=markers.get(row.id);if(!marker){marker=new naver.maps.Marker({map,position:latLng(row.location),icon:icon(row,i+1),title:row.name});naver.maps.Event.addListener(marker,'click',()=>openDetail(row.id,true));markers.set(row.id,marker);}else marker.setIcon(icon(row,i+1));marker.setZIndex(row.id===selected?1000:1);});}
 function render(){
   const base=userPosition||(viewBounds?currentPoint():null);
   visible=filterCenters(rows,state,viewBounds?viewport():null);
@@ -66,6 +78,7 @@ function loadNaver(){
 async function setupMap(){
   try{await loadNaver();}catch{$('mapError').hidden=false;return;}
   map=new naver.maps.Map('map',{center:latLng(state.location||{lat:36.35,lng:127.8}),zoom:state.location?state.zoom:7,minZoom:7,maxZoom:19,zoomControl:true,zoomControlOptions:{position:naver.maps.Position.RIGHT_CENTER},scrollWheel:true,pinchZoom:true,draggable:true});
+  globalThis.CareMarkerLabels.mount($('map'),map);
   naver.maps.Event.addListener(map,'dragstart',()=>{locationRequest++;userMapMove=true;});
   naver.maps.Event.addListener(map,'zoom_changed',()=>{if(!internalMove){locationRequest++;userMapMove=true;}});
   naver.maps.Event.addListener(map,'idle',()=>{if(internalMove||!userMapMove||!rows.length)return;userMapMove=false;viewBounds=true;pageSize=40;render();});
@@ -103,7 +116,8 @@ async function start(){
 }
 $('searchForm').onsubmit=e=>{e.preventDefault();search();};
 $('province').onchange=()=>{state.province=$('province').value;state.city='';cities();search();};$('city').onchange=search;$('program').onchange=search;
-document.querySelectorAll('[data-type]').forEach(b=>b.onclick=()=>{state.type=b.dataset.type;search();});
+// 유형 전환은 현재 검색 범위만 필터링하며 진행 중인 위치 요청과 지도 배율을 유지한다.
+document.querySelectorAll('[data-type]').forEach(b=>b.onclick=()=>{state.type=b.dataset.type;pageSize=40;controls();render();$('results').scrollTop=0;});
 $('reset').onclick=reset;$('fit').onclick=()=>{locationRequest++;viewBounds=false;fitRows(filterCenters(rows,state));render();};$('searchArea').onclick=()=>{locationRequest++;viewBounds=true;render();};
 $('locate').onclick=()=>locate();$('shareMap').onclick=()=>share(stateURL({...state,scope:viewBounds?'map':'all',location:currentPoint(),zoom:map?.getZoom()},location.origin),'치매안심 지도');
 $('closeDetail').onclick=closeDetail;$('detailDialog').addEventListener('cancel',e=>{e.preventDefault();closeDetail();});
