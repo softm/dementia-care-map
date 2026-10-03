@@ -1,4 +1,5 @@
-import {initializeStitchUI,syncStitchLayout} from './stitch-ui.js?v=20261001-update';
+import {initializeMobileSheet,revealMobileSheet} from './mobile-sheet.js';
+import {initializeStitchUI,syncStitchLayout} from './stitch-ui.js?v=20261001-map';
 import {icon as uiIcon,labelButton,enhanceDetail} from './ui-icons.js';
 import {mountAd,syncAds} from './care-ads.js?v=20261001-bottom';
 import './map-marker-placement.js';
@@ -41,7 +42,7 @@ function renderResults(markup){
   const template=document.createElement('template');template.innerHTML=markup;let count=0;
   for(const child of [...template.content.children]){if(child.matches('.center-card'))count++;if(ad&&count<=6)host.insertBefore(child,ad);else host.append(child);}
 }
-function revealMobileResults(){if(!isList()&&matchMedia('(max-width:760px)').matches&&!document.body.classList.contains('list-expanded'))$('mobileToggle').click();}
+function revealMobileResults(){revealMobileSheet();}
 function render(){
   const base=userPosition||(viewBounds?currentPoint():null);
   visible=filterCenters(rows,state,!isList()&&viewBounds?viewport():null);
@@ -93,7 +94,8 @@ function setupMap(){if(map)return Promise.resolve();if(mapSetupPromise)return ma
 async function initializeMap(){
   try{await loadNaver();}catch{$('mapError').hidden=false;return;}
   if(isList())return;
-  map=new naver.maps.Map('map',{center:latLng(state.location||{lat:36.35,lng:127.8}),zoom:state.location?state.zoom:7,minZoom:7,maxZoom:19,zoomControl:true,zoomControlOptions:{position:naver.maps.Position.RIGHT_CENTER},scrollWheel:true,pinchZoom:true,draggable:true});
+  map=new naver.maps.Map('map',{center:latLng(state.location||{lat:36.35,lng:127.8}),zoom:state.location?state.zoom:7,minZoom:7,maxZoom:19,zoomControl:!matchMedia('(max-width:760px)').matches,zoomControlOptions:{position:naver.maps.Position.RIGHT_CENTER},scrollWheel:true,pinchZoom:true,draggable:true});
+  matchMedia('(max-width:760px)').addEventListener('change',event=>map.setOptions({zoomControl:!event.matches}));
   globalThis.CareMarkerLabels.mount($('map'),map);
   naver.maps.Event.addListener(map,'dragstart',()=>{locationRequest++;userMapMove=true;});
   naver.maps.Event.addListener(map,'zoom_changed',()=>{if(!internalMove){locationRequest++;userMapMove=true;}});
@@ -135,11 +137,12 @@ $('province').onchange=()=>{state.province=$('province').value;state.city='';cit
 // 유형 전환은 현재 검색 범위만 필터링하며 진행 중인 위치 요청과 지도 배율을 유지한다.
 document.querySelectorAll('[data-type]').forEach(b=>b.onclick=()=>{state.type=b.dataset.type;pageSize=40;controls();render();$('results').scrollTop=0;});
 $('reset').onclick=reset;$('fit').onclick=()=>{locationRequest++;viewBounds=false;fitRows(filterCenters(rows,state));render();};$('searchArea').onclick=()=>{locationRequest++;viewBounds=true;render();};
+$('zoomIn').onclick=()=>{if(map)map.setZoom(map.getZoom()+1);};$('zoomOut').onclick=()=>{if(map)map.setZoom(map.getZoom()-1);};
 $('locate').onclick=()=>locate();$('shareMap').onclick=()=>share(stateURL({...state,scope:viewBounds?'map':'all',location:currentPoint(),zoom:map?.getZoom()},location.origin),'치매안심 지도');
 $('closeDetail').onclick=closeDetail;$('detailDialog').addEventListener('cancel',e=>{e.preventDefault();closeDetail();});
 $('detailDialog').addEventListener('click',e=>{if(e.target===$('detailDialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeDetail();}});
 for(const id of ['guideOpen','helpOpen'])$(id).onclick=()=>$('guideDialog').showModal();$('closeGuide').onclick=()=>$('guideDialog').close();
-$('mobileToggle').onclick=()=>{const expanded=document.body.classList.toggle('list-expanded');$('mobileToggle').setAttribute('aria-expanded',String(expanded));$('mobileToggle').textContent=expanded?'지도 크게 보기 ↓':'목록 크게 보기 ↑';if(map)internal(()=>naver.maps.Event.trigger(map,'resize'));};
+initializeMobileSheet();
 window.addEventListener('popstate',async()=>{locationRequest++;detailRequest++;state=readState(location.search);selected=state.center;syncModeUI();if(!isList())await setupMap();controls();if(state.location&&map&&!isList())internal(()=>setView(state.location,state.zoom));viewBounds=!isList()&&!!state.location&&state.scope!=='all';render();if(state.center)openDetail(state.center);else if($('detailDialog').open)$('detailDialog').close();});
 initializeUI();start();
 // SOFTM-DEMENTIA-APP END

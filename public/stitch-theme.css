@@ -90,3 +90,42 @@ body.large-text .guide-body p,body.large-text .guide-checklist li,body.large-tex
  body[data-care-mode=map].list-expanded .mobile-results-sheet #mapTopAd{display:block;flex:none;order:0;padding:4px 6px}
  body[data-care-mode=map] .mobile-results-sheet #mapTopAd .care-ad-body{min-height:50px}
 }
+/* Stitch 3fadf42877654b4c8311d63e224daf15: 모바일 지도모드 탐색. */
+#zoomIn,#zoomOut{display:none}
+@media(max-width:760px){
+ body[data-care-mode=map] .header{padding-top:6px;padding-bottom:6px}
+ body[data-care-mode=map] .search-panel{overflow:visible;border:0;background:transparent;box-shadow:none;padding:0;gap:8px;max-height:calc(100% - 60px)}
+ body[data-care-mode=map] .search-panel .searchbox{background:#fff;border:1px solid #cbd6d3;border-radius:14px;box-shadow:0 2px 8px #19222118;padding-left:12px}
+ body[data-care-mode=map] .search-panel .searchbox input{font-size:14px}
+ body[data-care-mode=map] #filterToggle{background:var(--green);color:#fff;border-radius:14px}
+ body[data-care-mode=map] .search-panel:not(.filters-open) .chips,body[data-care-mode=map] .search-panel .chips{display:flex;flex-wrap:nowrap;overflow-x:auto;margin:0;padding:0 0 4px;scrollbar-width:none}
+ body[data-care-mode=map] .chips button{flex:none;min-height:36px;background:#fff;border:1px solid #cbd6d3;border-radius:20px;padding:7px 12px;white-space:nowrap;font-size:12px}
+ body[data-care-mode=map] .chips button[aria-pressed=true]{background:var(--green);color:white}
+ body[data-care-mode=map] .search-panel.filters-open{background:white;padding:10px;overflow:auto;border:1px solid var(--line)}
+ body[data-care-mode=map] .map-top{top:130px;left:auto;right:12px;width:44px;display:block}
+ body[data-care-mode=map] .map-actions{display:flex;flex-direction:column;gap:6px}
+ body[data-care-mode=map] .map-actions button{display:flex;align-items:center;justify-content:center;min-width:44px;width:44px;height:44px;min-height:44px;padding:8px;border-radius:50%;box-shadow:0 2px 8px #19222118}
+ body[data-care-mode=map] .map-actions button span{display:none}
+ body[data-care-mode=map] #zoomIn,body[data-care-mode=map] #zoomOut{display:flex;font-size:24px}
+ body[data-care-mode=map] #shareMap{display:none}
+ body[data-care-mode=map][data-mobile-sheet=split] .map-top{top:auto;bottom:calc(55% + 10px);width:94px}
+ body[data-care-mode=map][data-mobile-sheet=split] .map-actions{display:grid;grid-template-columns:44px 44px;gap:6px}
+ body[data-care-mode=map][data-mobile-sheet=list] .map-top{display:none}
+ body[data-care-mode=map] .area-button{top:104px;max-width:calc(100% - 100px);font-size:12px;background:#fff}
+ body[data-care-mode=map] .mobile-results-sheet{max-height:85%;transition:height .2s ease}
+ body[data-care-mode=map][data-mobile-sheet=focus] .mobile-results-sheet{height:44px}
+ body[data-care-mode=map][data-mobile-sheet=map] .mobile-results-sheet{height:108px}
+ body[data-care-mode=map][data-mobile-sheet=split] .mobile-results-sheet{height:55%}
+ body[data-care-mode=map][data-mobile-sheet=list] .mobile-results-sheet{height:85%}
+ body[data-care-mode=map].sheet-dragging .mobile-results-sheet{height:var(--sheet-drag-height);transition:none}
+ body[data-care-mode=map] .mobile-toggle{touch-action:none;user-select:none;cursor:ns-resize;flex-direction:column;gap:4px;font-size:12px}
+ body[data-care-mode=map].sheet-dragging .mobile-toggle{cursor:grabbing}
+ body[data-care-mode=map][data-mobile-sheet=split] .results{display:flex;overflow-x:auto;overflow-y:auto;gap:10px;scroll-snap-type:x proximity}
+ body[data-care-mode=map][data-mobile-sheet=split] .center-card{flex:0 0 calc(100% - 18px);min-width:0;scroll-snap-align:start;margin:0;border:1px solid var(--green);border-radius:18px;padding:14px}
+ body[data-care-mode=map] .card-heading h3{font-size:18px}body[data-care-mode=map] .card-address{font-size:13px}
+ body[data-care-mode=map] .card-actions button{border-radius:12px;font-size:13px;min-height:44px}
+ body[data-care-mode=map] .card-actions button:first-child{background:var(--green);color:#fff}
+ body[data-care-mode=map] .scope-note{font-size:11px;padding-bottom:5px}
+ body[data-care-mode=map] .map-legend{display:none}
+}
+@media(prefers-reduced-motion:reduce){.mobile-results-sheet{transition:none!important}}
