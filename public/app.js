@@ -1,7 +1,7 @@
-import {initializeLayout} from './stitch-layout.js';
+import {initializeLayout} from './stitch-layout.js?v=20261003-review';
 import {initializeMobileSheet,revealMobileSheet} from './mobile-sheet.js';
-import {initializeStitchUI,syncStitchLayout} from './stitch-ui.js?v=20261001-map';
-import {icon as uiIcon,labelButton,enhanceDetail} from './ui-icons.js';
+import {initializeStitchUI,syncStitchLayout} from './stitch-ui.js?v=20261003-review';
+import {icon as uiIcon,labelButton,enhanceDetail} from './ui-icons.js?v=20261003-review';
 import {mountAd,syncAds} from './care-ads.js?v=20261001-bottom';
 import './map-marker-placement.js';
 import './map-marker-labels.js';

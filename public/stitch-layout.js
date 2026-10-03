@@ -1,4 +1,4 @@
-import {icon} from './ui-icons.js';
+import {icon} from './ui-icons.js?v=20261003-review';
 // Stitch 화면의 탐색 구조. 개인 프로필·날씨·예시 교통정보는 생성하지 않는다.
 export function initializeLayout({setMode,locate,route,favorites,toggleLayer}){
  const $=id=>document.getElementById(id);

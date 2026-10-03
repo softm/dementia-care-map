@@ -1,5 +1,5 @@
 // Stitch c067e783ea7d4bba90c2e17287bfd603: 큰글씨 이용 안내. 비용·대상·준비물은 센터별 확인으로 안내한다.
-import {icon} from './ui-icons.js';
+import {icon} from './ui-icons.js?v=20261003-review';
 export function initializeGuide(){
  document.querySelector('#guideDialog .guide-body').innerHTML=`
  <div class="guide-intro"><span class="guide-mode-label">쉽게 읽는 이용 안내</span><button id="guideLargeText" type="button" aria-pressed="false">큰글씨로 보기</button></div>
