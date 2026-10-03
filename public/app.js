@@ -1,3 +1,4 @@
+import {initializeLayout} from './stitch-layout.js';
 import {initializeMobileSheet,revealMobileSheet} from './mobile-sheet.js';
 import {initializeStitchUI,syncStitchLayout} from './stitch-ui.js?v=20261001-map';
 import {icon as uiIcon,labelButton,enhanceDetail} from './ui-icons.js';
@@ -10,6 +11,11 @@ import {TYPES,CARE_TYPES,escapeHTML as esc,validLocation,distance,filterCenters,
 const $=id=>document.getElementById(id);
 let state=readState(location.search),rows=[],visible=[],manifest,map,selected='',pageSize=40,viewBounds=false,internalMove=false,userMapMove=false,userPosition=null,userMarker,detailRequest=0,locationRequest=0,toastTimer;
 const markers=new Map();
+let savedOnly=false;let saved=new Set();try{saved=new Set(JSON.parse(sessionStorage.getItem('dementiaSavedCenters')||'[]'));}catch{}
+const detailCache=new Map();
+function getDetail(id){if(!detailCache.has(id))detailCache.set(id,loadJSON(`data/dementia/details/${id}.json?v=${manifest.revision}`).catch(error=>{detailCache.delete(id);throw error;}));return detailCache.get(id);}
+function directionsURL(row){return `https://map.naver.com/p/search/${encodeURIComponent(row.name+' '+row.address)}`;}
+async function callCenter(id,button){button.disabled=true;try{const center=await getDetail(id);const phone=center.phone.replace(/[^\d+]/g,'');if(phone)location.href=`tel:${phone}`;else toast('연락처 미확인입니다. 상세정보의 공식 출처를 확인하세요.');}catch{toast('연락처를 불러오지 못했습니다. 다시 시도해 주세요.');}finally{button.disabled=false;}}
 let mapDataReady=false,pendingLocation=null,mapSetupPromise,modeRevision=0,mapView=null;
 const isList=()=>state.mode==='list';
 function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,4500);}
@@ -30,12 +36,17 @@ function icon(row){
   const detail=row.programTags.length?row.programTags.join(' · '):'프로그램 미확인';
   return {content:`<div class="named-marker ${active?'active':''}" data-marker-id="${esc(row.id)}"><div class="marker-name"><span class="care-marker-title">${esc(row.name)}</span><span class="care-marker-fact care-marker-overview">${esc(overview)}</span><span class="care-marker-fact care-marker-detail">${esc(detail)}</span></div><button type="button" aria-label="${esc(row.name)}" class="map-pin ${row.type} ${active?'active':''}"><b>${markerLabel}</b></button></div>`,size:new naver.maps.Size(active?43:30,active?43:30),anchor:new naver.maps.Point(active?21:15,active?43:30)};
 }
+function selectMapCenter(id){
+ if(!matchMedia('(max-width:760px)').matches){openDetail(id,true);return;}
+ selected=id;pageSize=Math.max(pageSize,visible.findIndex(row=>row.id===id)+1);revealMobileResults();render();
+ const card=[...document.querySelectorAll('.center-card')].find(el=>el.dataset.id===id);if(card)card.scrollIntoView({block:'nearest',inline:'start',behavior:'smooth'});
+}
 function updateMarkers(list){if(!map||isList())return;
   const host=$('map'),bounds=viewport();
   const count=list.filter(row=>validLocation(row.location)&&row.location.lat>=bounds.south&&row.location.lat<=bounds.north&&row.location.lng>=bounds.west&&row.location.lng<=bounds.east).length;
   const limit=Math.max(12,Math.min(80,Math.floor(host.clientWidth*host.clientHeight/9000)));
   host.classList.toggle('care-compact-markers',count>limit);
-  const ids=new Set(list.map(r=>r.id));for(const [id,marker] of markers){if(!ids.has(id)){marker.setMap(null);naver.maps.Event.clearInstanceListeners(marker);markers.delete(id);}}list.forEach((row,i)=>{if(!validLocation(row.location))return;let marker=markers.get(row.id);if(!marker){marker=new naver.maps.Marker({map,position:latLng(row.location),icon:icon(row),title:row.name});naver.maps.Event.addListener(marker,'click',()=>openDetail(row.id,true));markers.set(row.id,marker);}else marker.setIcon(icon(row));marker.setZIndex(row.id===selected?1000:1);});}
+  const ids=new Set(list.map(r=>r.id));for(const [id,marker] of markers){if(!ids.has(id)){marker.setMap(null);naver.maps.Event.clearInstanceListeners(marker);markers.delete(id);}}list.forEach((row,i)=>{if(!validLocation(row.location))return;let marker=markers.get(row.id);if(!marker){marker=new naver.maps.Marker({map,position:latLng(row.location),icon:icon(row),title:row.name});naver.maps.Event.addListener(marker,'click',()=>selectMapCenter(row.id));markers.set(row.id,marker);}else marker.setIcon(icon(row));marker.setZIndex(row.id===selected?1000:1);});}
 function renderResults(markup){
   const host=$('results'),ad=host.querySelector('[data-placement="inline"]');
   for(const child of [...host.children])if(child!==ad)child.remove();
@@ -46,21 +57,31 @@ function revealMobileResults(){revealMobileSheet();}
 function render(){
   const base=userPosition||(viewBounds?currentPoint():null);
   visible=filterCenters(rows,state,!isList()&&viewBounds?viewport():null);
+  if(savedOnly)visible=visible.filter(row=>saved.has(row.id));
   visible.sort((a,b)=>base?distance(base,a.location)-distance(base,b.location)||a.name.localeCompare(b.name,'ko'):[a.province,a.city,a.name].join('').localeCompare([b.province,b.city,b.name].join(''),'ko'));
+  $('navSaved')?.setAttribute('aria-pressed',String(savedOnly));
+  document.querySelector('.results-header h2').firstChild.nodeValue=savedOnly?'즐겨찾기 ':'찾은 센터 ';
   $('count').textContent=visible.length.toLocaleString();$('sortLabel').textContent=base?'직선거리순':'지역·이름순';
   const missing=visible.filter(r=>!validLocation(r.location)).length;
   $('scopeNote').textContent=(!isList()&&viewBounds?'현재 지도 영역의 결과입니다.':'선택한 조건의 전체 결과입니다.')+(missing?` 위치 미확인 ${missing}곳은 목록에서 확인하세요.`:'')+(state.program?' 원자료에 명시된 프로그램 기준입니다.':'');
   $('mapLabel').textContent=[state.province||'전국',state.city,TYPES[state.type]||'치매센터'].filter(Boolean).join(' ');
   if(!visible.length){renderResults('<div class="empty"><strong>찾은 센터가 없습니다.</strong><br>검색어나 지역·지도 범위를 넓혀 보세요.<br><button id="emptyReset">전체 센터 보기</button></div>');$('emptyReset').onclick=reset;revealMobileResults();}
   else{
-    renderResults(visible.slice(0,pageSize).map((r,index)=>{const d=base?distance(base,r.location):Infinity;return `<article class="center-card ${r.id===selected?'selected':''}" data-id="${esc(r.id)}"><button type="button" class="card-open" aria-label="${esc(r.name)} 상세정보"><div class="card-heading"><span class="card-rank">${index+1}</span><h3>${esc(r.name)}</h3>${uiIcon('chevron')}</div><div class="card-top"><span class="badge ${r.type}">${TYPES[r.type]}</span><span class="distance">${Number.isFinite(d)?`직선 ${d.toFixed(1)}km`:!r.location?'위치 미확인':''}</span></div><p class="card-address">${uiIcon('pin')}<span>${esc(r.address)}</span></p><div class="tags">${r.programTags.length?r.programTags.map(t=>`<span>${esc(t)}</span>`).join(''):'<span>프로그램 미확인 · 상세에서 연락처 확인</span>'}</div></button><div class="card-actions"><button type="button" data-card-map="${esc(r.id)}">${uiIcon('map')}지도에서 보기</button><button type="button" data-card-detail="${esc(r.id)}">${uiIcon('info')}상세정보</button></div></article>`;}).join('')+(visible.length>pageSize?`<button class="more" id="more">센터 더 보기 (${Math.min(pageSize,visible.length)} / ${visible.length})</button>`:''));
-    $('results').querySelectorAll('.center-card').forEach(card=>card.onclick=async event=>{if(event.target.closest('[data-card-map]'))await setMode('map');openDetail(card.dataset.id,true);});
+    renderResults(visible.slice(0,pageSize).map((r,index)=>{const d=base?distance(base,r.location):Infinity;return `<article class="center-card ${r.id===selected?'selected':''}" data-id="${esc(r.id)}"><div class="card-top"><span class="badge ${r.type}">${TYPES[r.type]}</span><span class="status-unknown">운영시간 미확인</span><button class="save-center" data-save="${esc(r.id)}" aria-label="${esc(r.name)} 즐겨찾기" aria-pressed="${saved.has(r.id)}">${uiIcon('heart')}</button></div><button type="button" class="card-open" aria-label="${esc(r.name)} 상세정보"><div class="card-heading"><h3>${esc(r.name)}</h3></div><p class="card-address">${uiIcon('pin')}<span>${esc(r.address)||'주소 미확인'}</span></p><span class="distance">${Number.isFinite(d)?`직선 ${d.toFixed(1)}km`:!r.location?'위치 미확인':''}</span><div class="tags"><strong>공개 프로그램 정보</strong>${r.programTags.length?r.programTags.map(t=>`<span>${esc(t)}</span>`).join(''):'<span>미확인 · 센터에 문의하세요</span>'}</div></button><div class="card-actions"><button type="button" data-card-call="${esc(r.id)}">${uiIcon('phone')}전화상담</button><a href="${esc(directionsURL(r))}" target="_blank" rel="noopener">${uiIcon('map')}길찾기</a><button type="button" data-card-detail="${esc(r.id)}">상세보기</button></div><button class="card-map-link" data-card-map="${esc(r.id)}">${uiIcon('pin')} 지도에서 보기</button></article>`;}).join('')+(visible.length>pageSize?`<button class="more" id="more">센터 더 보기 (${Math.min(pageSize,visible.length)} / ${visible.length})</button>`:''));
+    $('results').querySelectorAll('.center-card').forEach(card=>card.onclick=async event=>{
+      const id=card.dataset.id;
+      if(event.target.closest('a'))return;
+      if(event.target.closest('[data-save]')){saved.has(id)?saved.delete(id):saved.add(id);try{sessionStorage.setItem('dementiaSavedCenters',JSON.stringify([...saved]));}catch{}render();return;}
+      const call=event.target.closest('[data-card-call]');if(call){void callCenter(id,call);return;}
+      if(event.target.closest('[data-card-map]')){await setMode('map');const row=rows.find(r=>r.id===id);selected=id;if(map&&validLocation(row.location))internal(()=>setView(row.location,15));updateMarkers(visible);revealMobileResults();return;}
+      if(event.target.closest('button'))openDetail(id,true);
+    });
     if($('more'))$('more').onclick=()=>{const top=$('results').scrollTop;pageSize+=40;render();$('results').scrollTop=top;};
   }
   updateMarkers(visible);saveURL();syncAds(isList()?'list':'map');renderSummary();
 }
 function search(){locationRequest++;state={...state,q:$('q').value.trim(),province:$('province').value,city:$('city').value,program:$('program').value};viewBounds=false;pageSize=40;controls();fitRows(filterCenters(rows,state));render();$('results').scrollTop=0;}
-function reset(){locationRequest++;if(userMarker){userMarker.setMap(null);userMarker=null;}state={...state,q:'',type:'',province:'',city:'',program:''};controls();viewBounds=false;userPosition=null;pageSize=40;fitRows(rows);render();}
+function reset(){savedOnly=false;locationRequest++;if(userMarker){userMarker.setMap(null);userMarker=null;}state={...state,q:'',type:'',province:'',city:'',program:''};controls();viewBounds=false;userPosition=null;pageSize=40;fitRows(rows);render();}
 async function share(url,title){try{if(navigator.share){await navigator.share({title,url:String(url)});return;}await navigator.clipboard.writeText(String(url));toast('링크를 복사했습니다.');}catch(e){if(e.name==='AbortError')return;try{await navigator.clipboard.writeText(String(url));toast('링크를 복사했습니다.');}catch{toast('공유 링크를 복사해 주세요.');const input=document.createElement('input');input.value=String(url);input.setAttribute('aria-label','복사할 공유 링크');input.style.cssText='width:100%;padding:12px';($('detailDialog').open?$('detailBody'):$('searchForm')).append(input);input.focus();input.select();}}}
 function closeDetail(){detailRequest++;selected='';state.center='';if($('detailDialog').open)$('detailDialog').close();updateMarkers(visible);document.querySelectorAll('.center-card.selected').forEach(b=>b.classList.remove('selected'));saveURL();}
 async function openDetail(id,push=false){
@@ -71,7 +92,7 @@ async function openDetail(id,push=false){
   updateMarkers(visible);document.querySelectorAll('.center-card').forEach(b=>b.classList.toggle('selected',b.dataset.id===id));
   $('detailBody').innerHTML=`<h2 id="detailTitle">${esc(row.name)}</h2><p class="muted">상세정보를 불러오고 있습니다…</p>`;if(!$('detailDialog').open)$('detailDialog').showModal();
   try{
-    const center=await loadJSON(`data/dementia/details/${id}.json?v=${manifest.revision}`);if(request!==detailRequest)return;
+    const center=await getDetail(id);if(request!==detailRequest)return;
     const website=safeWebsite(center.website);const phone=center.phone.replace(/[^\d+]/g,'');const programs=center.programs?center.programs.split(/[+\n]/).filter(Boolean):[];
     const directions=`https://map.naver.com/p/search/${encodeURIComponent(center.name+' '+center.address)}`;
     $('detailBody').innerHTML=`<span class="badge ${center.type}">${TYPES[center.type]}</span><h2 id="detailTitle">${esc(center.name)}</h2><div class="detail-meta"><small>주소</small>${esc(center.address)}${!center.location?'<p class="muted">좌표가 확인되지 않아 지도에는 표시하지 않습니다.</p>':''}</div><div class="detail-meta"><small>전화</small>${esc(center.phone)||'공개 자료에 연락처가 없습니다.'}</div><div class="detail-actions">${phone?`<a class="call" href="tel:${phone}">전화 문의</a>`:''}<a href="${directions}" target="_blank" rel="noopener">길찾기 ↗</a>${website?`<a href="${esc(website)}" target="_blank" rel="noopener">공식 홈페이지 ↗</a>`:''}<button id="shareCenter">공유</button><button id="copyAddress">주소 복사</button></div>${center.conflicts.length?'<p class="notice">출처마다 주소·연락처·유형 또는 위치 정보에 차이가 있습니다. 출처와 기준일을 함께 확인하고 방문 전 센터에 문의해 주세요.</p>':''}<section class="detail-section"><h3>검사·상담 · 가족지원 프로그램</h3>${programs.length?`<ul class="program-list">${programs.map(p=>`<li>${esc(p)}</li>`).join('')}</ul>`:'<p class="muted">공개 자료에 프로그램 정보가 없습니다. 센터 전화 또는 공식 홈페이지에서 확인해 주세요.</p>'}<p class="muted">${center.fieldSources?.programs?.date?`프로그램 자료 기준일 ${esc(center.fieldSources.programs.date)}. `:""}원자료에 기재된 안내입니다. 현재 운영 여부·예약·이용 대상은 센터에 문의하세요.</p></section>${center.facilities?`<section class="detail-section"><h3>시설 안내</h3><p class="muted">${esc(center.facilities.replaceAll('+',' · '))}</p></section>`:''}<section class="detail-section"><h3>주변 돌봄도 함께 찾아보세요</h3><p class="muted">센터 위치를 기준으로 돌봄한눈의 지도를 엽니다.</p><div class="care-links">${Object.entries(CARE_TYPES).map(([type,label])=>`<a href="${esc(careURL(center,type))}" target="_blank" rel="noopener">${label} ↗</a>`).join('')}</div></section><section class="detail-section"><h3>자료 출처</h3><ul class="source-list">${center.sources.map(s=>`<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)} ↗</a><span>기준일 ${esc(s.date||'미제공')} · 원문 명칭 ${esc(s.nameInSource)}</span></li>`).join('')}</ul>${center.operator?`<p class="muted">운영기관 ${esc(center.operator)}</p>`:''}<p class="muted">치매안심은 공공데이터 기반 독립 정보 서비스입니다.</p></section>`;
@@ -150,6 +171,7 @@ initializeUI();start();
 // SOFTM-DEMENTIA-MODES START 날짜:20261001 : 돌봄한눈의 전체 목록·지도 탐색 전환을 센터 데이터에 연결.
 function syncModeUI(){
  document.body.dataset.careMode=isList()?'list':'map';syncStitchLayout();
+ $('navHome')?.setAttribute('aria-current',isList()?'page':'false');$('navMap')?.setAttribute('aria-current',isList()?'false':'page');
  document.querySelectorAll('[data-mode]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.mode===state.mode)));
  $('listSummary').hidden=!isList();
 }
@@ -174,6 +196,7 @@ async function setMode(next){
 }
 function initializeUI(){
  initializeStitchUI();
+ initializeLayout({setMode,locate:()=> $('listLocate').click(),route:()=>{const row=rows.find(r=>r.id===selected)||visible[0];if(row)openDetail(row.id,true);else toast('먼저 센터를 검색하고 선택해 주세요.');},favorites:async()=>{savedOnly=!savedOnly;await setMode('list');render();document.querySelector('.results-header').scrollIntoView({block:'start'});toast(savedOnly?'이 탭에 저장한 센터를 표시합니다.':'전체 검색 결과를 표시합니다.');},toggleLayer:()=>{if(!map){toast('지도가 준비된 후 다시 시도해 주세요.');return;}const button=$('mapLayer'),satellite=button.getAttribute('aria-pressed')!=='true';map.setMapTypeId(satellite?naver.maps.MapTypeId.HYBRID:naver.maps.MapTypeId.NORMAL);button.setAttribute('aria-pressed',String(satellite));button.setAttribute('aria-label',satellite?'일반지도 전환':'위성지도 전환');}});
  for(const [id,name,label] of [['locate','locate','내 위치'],['fit','grid','전체 결과'],['shareMap','share','지도 공유'],['reset','reset','초기화'],['listLocate','locate','내 주변 지도'],['shareList','share','검색 공유'],['closeDetail','close',''],['closeGuide','close',''],['guideOpen','info','이용 안내'],['helpOpen','chevron','']])labelButton(id,name,label);
  document.querySelector('.searchbox > span').innerHTML=uiIcon('search');document.querySelector('.searchbox > button').innerHTML=uiIcon('search');
  document.querySelectorAll('[data-mode]').forEach(button=>{button.innerHTML=uiIcon(button.dataset.mode)+`<span>${button.dataset.mode==='list'?'목록 보기':'지도 보기'}</span>`;button.onclick=()=>setMode(button.dataset.mode);});

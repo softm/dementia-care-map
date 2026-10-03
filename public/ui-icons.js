@@ -24,16 +24,17 @@ export function enhanceDetail(){
  hero.append(host.querySelector('.badge'),host.querySelector('h2'));
  const actions=host.querySelector('.detail-actions');
  actions.querySelectorAll('a,button').forEach(el=>{const text=el.textContent.replace(' ↗','');const name=el.matches('.call')?'phone':el.id==='shareCenter'?'share':el.id==='copyAddress'?'copy':text.includes('길찾기')?'map':'external';el.innerHTML=icon(name)+`<span>${text}</span>`;});
- const tabs=document.createElement('div');tabs.className='detail-tabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','센터 상세 항목');
  const panels=document.createElement('div');panels.className='detail-panels';
- const definitions=[['basic','기본정보','building'],['programs','프로그램','heart'],['care','주변 돌봄','map'],['sources','자료 출처','info']];
- definitions.forEach(([key,label,name],i)=>{
-  const button=document.createElement('button');button.type='button';button.id=`detailTab-${key}`;button.setAttribute('role','tab');button.setAttribute('aria-controls',`detailPanel-${key}`);button.innerHTML=icon(name)+label;
-  const panel=document.createElement('section');panel.id=`detailPanel-${key}`;panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby',button.id);panel.tabIndex=0;panel.hidden=i!==0;
-  button.onclick=()=>selectTab(i);tabs.append(button);panels.append(panel);
- });
- function selectTab(index){[...tabs.children].forEach((button,i)=>{button.setAttribute('aria-selected',String(i===index));button.tabIndex=i===index?0:-1;panels.children[i].hidden=i!==index;});}
- tabs.onkeydown=event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const current=[...tabs.children].indexOf(document.activeElement);const next=event.key==='Home'?0:event.key==='End'?3:(current+(event.key==='ArrowRight'?1:3))%4;selectTab(next);tabs.children[next].focus();};
+ const definitions=[['basic','방문 안내'],['programs','공개 프로그램'],['care','주변 돌봄'],['sources','자료 출처']];
+ definitions.forEach(([key,label])=>{const panel=document.createElement('section');panel.id=`detailPanel-${key}`;panel.setAttribute('aria-label',label);panels.append(panel);});
+ const metadata=[...host.querySelectorAll(':scope > .detail-meta')];
+ for(const el of metadata.reverse())hero.append(el);
+ const callHref=actions.querySelector('.call')?.getAttribute('href');if(callHref&&metadata[0]){const number=metadata[0];const label=number.querySelector('small');const link=document.createElement('a');link.href=callHref;link.textContent=[...number.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('');number.replaceChildren(label,link);}
  [...host.children].forEach(el=>{if(el===actions)return;let key=0;if(el.classList.contains('detail-section')){const heading=el.querySelector('h3')?.textContent||'';key=heading.includes('자료 출처')?3:heading.includes('주변 돌봄')?2:1;}panels.children[key].append(el);});
- host.replaceChildren(hero,actions,tabs,panels);selectTab(0);
+ const checks=document.createElement('section');checks.className='visit-checks';checks.innerHTML='<h3>방문 전 꼭 확인해 주세요</h3><p><strong>1. 전화로 일정 확인</strong><br>운영시간·예약·이용 대상·비용을 센터에 먼저 문의하세요.</p><p><strong>2. 준비물 확인</strong><br>신분증·복용약 자료·가족 동행 서류가 필요한지 확인하세요.</p>';
+ panels.children[0].append(checks);
+ const unknown=document.createElement('p');unknown.className='detail-unconfirmed';unknown.textContent='운영시간 · 예약 가능 시간 · 주차 · 대중교통 정보: 미확인. 길찾기에서 경로를 확인하고 접근 편의시설은 센터에 문의하세요.';panels.children[0].append(unknown);
+ const contact=document.createElement('a');contact.className='consultation-banner';contact.href='tel:18999988';contact.innerHTML=icon('phone')+'<span><small>치매에 대해 궁금할 때</small><strong>치매상담 1899-9988</strong></span>';panels.children[2].append(contact);
+ host.replaceChildren(hero,actions,panels);
+ const top=document.createElement('button');top.className='detail-back-top';top.textContent='화면 맨 위로 이동 ↑';top.onclick=()=>document.getElementById('detailDialog').scrollTo({top:0,behavior:'smooth'});host.append(top);
 }
