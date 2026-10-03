@@ -1,4 +1,4 @@
-import {syncBottomAd} from './care-bottom-ad.js';
+import {syncBottomAd} from './care-bottom-ad.js?v=20261003-reading';
 import {AD_CONFIG as config} from './ad-config.js?v=20261001-bottom';
 // SOFTM-DEMENTIA-ADS START 날짜:20261001 : 실제 보이는 슬롯만 요청하고 목록 재조회는 광고를 재발급하지 않는다.
 const cache=new Map(),mounts=new Map();let serial=0;

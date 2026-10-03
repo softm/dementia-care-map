@@ -89,3 +89,36 @@ body[data-care-mode=list] #results>#listTopAd{grid-column:1/-1;padding:8px 0;min
 @media(min-width:761px){
  body[data-care-mode=map] .sidebar>.search-panel{max-height:45%;overflow-y:auto}
 }
+
+/* 목록을 읽기 시작하면 검색 조건과 부가 영역을 접어 읽기 공간을 확보한다. */
+#readingToggle{display:none;border:1px solid #cbd6d3;border-radius:8px;background:white;color:#004840;font:inherit;font-size:13px;font-weight:700;min-height:40px;padding:8px 12px;white-space:nowrap}
+body[data-care-mode=map] #readingToggle{display:block}
+body[data-care-mode=map] .results-header{gap:10px;flex-wrap:wrap;align-items:center}
+body[data-care-mode=map] .results-header #sortLabel{margin-left:auto}
+body.reading-list[data-care-mode=map] .scope-note,body.reading-list[data-care-mode=map] .sidebar-footer{display:none}
+@media(min-width:761px){
+ body.reading-list[data-care-mode=map] .search-panel{padding:12px 16px;max-height:none}
+ body.reading-list[data-care-mode=map] .search-title,body.reading-list[data-care-mode=map] .region-row,body.reading-list[data-care-mode=map] #filterToggle,body.reading-list[data-care-mode=map] .chips,body.reading-list[data-care-mode=map] .filter-bottom{display:none}
+ body.reading-list[data-care-mode=map] .results-header{padding:10px 16px}
+ body.reading-list[data-care-mode=map] .results{padding-top:10px}
+}
+@media(max-width:760px){
+ body[data-care-mode=map] #readingToggle{min-height:36px;font-size:12px;padding:6px 9px}
+ body.reading-list[data-care-mode=map] .search-panel{display:none}
+ body.reading-list[data-care-mode=map][data-mobile-sheet=list] .mobile-results-sheet{height:100%;max-height:100%;border-radius:0}
+ body.reading-list[data-care-mode=map] .map-consultation{display:none}
+ body.reading-list[data-care-mode=map] .results-header{padding:8px 14px}
+}
+
+@media(min-width:761px){
+ body.reading-list[data-care-mode=map] .center-card{padding:16px;margin-bottom:12px}
+ body.reading-list[data-care-mode=map] .card-open{gap:6px}
+ body.reading-list[data-care-mode=map] .card-top{margin-bottom:8px}
+ body.reading-list[data-care-mode=map] .card-heading{margin-bottom:4px}
+ body.reading-list[data-care-mode=map] .card-heading h3{font-size:20px}
+ body.reading-list[data-care-mode=map] .tags{padding:10px;margin-top:6px;gap:6px}
+ body.reading-list[data-care-mode=map] .card-actions{margin-top:12px}
+ body.reading-list[data-care-mode=map] .card-actions>*{min-height:44px}
+ body.reading-list[data-care-mode=map] .card-map-link{min-height:36px;margin-top:4px}
+}
+@media(max-width:760px){body.reading-list[data-care-mode=map] .tags{display:flex}}

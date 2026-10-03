@@ -1,7 +1,8 @@
 // SOFTM-BOTTOM-AD 날짜:20261001 : 돌봄한눈의 공용 하단 광고·세션 접힘·목록 읽기 중 임시 접힘 동작.
 const storageKey='dementiaBottomAd:collapsed:v1';
 let zone,button,panel,host,mount,mode,expanded=true,reading=false,readingExpanded=false;
-const visibleExpanded=()=>mode==='list'&&reading?readingExpanded:expanded;
+window.addEventListener('care-reading-change',event=>{reading=event.detail.active;readingExpanded=false;if(zone)sync();});
+const visibleExpanded=()=>reading?readingExpanded:expanded;
 function syncSpace(){document.body.style.setProperty('--bottom-ad-space',`${Math.ceil(zone.getBoundingClientRect().height)}px`);}
 function sync(){
  const open=visibleExpanded();panel.hidden=!open;zone.dataset.expanded=String(open);
@@ -19,7 +20,7 @@ export function syncBottomAd(nextMode,mountAd){
   panel=document.createElement('div');panel.id='bottomAdPanel';
   host=document.createElement('div');host.id='bottomAdHost';panel.append(host);zone.append(button,panel);document.body.append(zone);
   button.onclick=()=>{
-   if(mode==='list'&&reading)readingExpanded=!visibleExpanded();
+   if(reading)readingExpanded=!visibleExpanded();
    else{expanded=!expanded;try{sessionStorage.setItem(storageKey,expanded?'0':'1');}catch{}}
    sync();
   };
@@ -32,6 +33,6 @@ export function syncBottomAd(nextMode,mountAd){
   new ResizeObserver(syncSpace).observe(zone);
   window.addEventListener('resize',sync,{passive:true});document.addEventListener('visibilitychange',sync);
  }
- if(mode!=='list')reading=false;
+ if(mode!=='list')reading=document.body.classList.contains('reading-list');
  sync();
 }
