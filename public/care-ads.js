@@ -32,8 +32,16 @@ export function mountAd(host,placement){
 }
 export function syncAds(mode){
  syncBottomAd(mode,mountAd);
- mountAd(document.getElementById(mode==='list'?'listTopAd':'mapTopAd'),mode);
  const results=document.getElementById('results');const cards=results.querySelectorAll('.center-card');
+ const listAd=document.getElementById('listTopAd'),mapAd=document.getElementById('mapTopAd');
+ listAd.hidden=mode!=='list'||!cards.length;
+ const host=mode==='list'?listAd:mapAd;
+ // 첫 세 센터 뒤에서 함께 스크롤한다. 결과가 적으면 마지막 센터 뒤에 둔다.
+ if(mode==='list'||matchMedia('(max-width:760px)').matches){
+  host.hidden=!cards.length;
+  if(cards.length)cards[Math.min(2,cards.length-1)].after(host);
+ }else{host.hidden=false;document.querySelector('.map-section').prepend(host);}
+ mountAd(host,mode);
  const existing=results.querySelector('[data-placement=inline]');if(existing)existing.hidden=cards.length<6;
  if(cards.length>=6){const ad=slotNode('inline',config.placements.inline.mobile);ad.hidden=false;if(cards[5].nextElementSibling!==ad)cards[5].after(ad);}
 }

@@ -13,6 +13,6 @@ export function initializeStitchUI(){
 
 export function syncStitchLayout(){
  const ad=document.getElementById('mapTopAd');const mobile=matchMedia('(max-width:760px)').matches&&document.body.dataset.careMode==='map';
- const parent=document.querySelector(mobile?'.mobile-results-sheet':'.map-section');
- if(ad.parentElement!==parent){if(mobile)parent.insertBefore(ad,document.getElementById('results'));else parent.prepend(ad);}
+ if(mobile){const cards=document.querySelectorAll('#results>.center-card');ad.hidden=!cards.length;if(cards.length)cards[Math.min(2,cards.length-1)].after(ad);}
+ else if(ad.parentElement!==document.querySelector('.map-section'))document.querySelector('.map-section').prepend(ad);
 }

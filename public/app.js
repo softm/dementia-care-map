@@ -1,8 +1,8 @@
 import {initializeLayout} from './stitch-layout.js?v=20261003-review';
 import {initializeMobileSheet,revealMobileSheet} from './mobile-sheet.js';
-import {initializeStitchUI,syncStitchLayout} from './stitch-ui.js?v=20261003-review';
+import {initializeStitchUI,syncStitchLayout} from './stitch-ui.js?v=20261003-ad-position';
 import {icon as uiIcon,labelButton,enhanceDetail} from './ui-icons.js?v=20261003-review';
-import {mountAd,syncAds} from './care-ads.js?v=20261001-bottom';
+import {mountAd,syncAds} from './care-ads.js?v=20261003-ad-position';
 import './map-marker-placement.js';
 import './map-marker-labels.js';
 import {TYPES,CARE_TYPES,escapeHTML as esc,validLocation,distance,filterCenters,readState,stateURL,centerURL,careURL,safeWebsite,loadJSON} from './core.js?v=20261001-modes-ads';
@@ -49,7 +49,7 @@ function updateMarkers(list){if(!map||isList())return;
   const ids=new Set(list.map(r=>r.id));for(const [id,marker] of markers){if(!ids.has(id)){marker.setMap(null);naver.maps.Event.clearInstanceListeners(marker);markers.delete(id);}}list.forEach((row,i)=>{if(!validLocation(row.location))return;let marker=markers.get(row.id);if(!marker){marker=new naver.maps.Marker({map,position:latLng(row.location),icon:icon(row),title:row.name});naver.maps.Event.addListener(marker,'click',()=>selectMapCenter(row.id));markers.set(row.id,marker);}else marker.setIcon(icon(row));marker.setZIndex(row.id===selected?1000:1);});}
 function renderResults(markup){
   const host=$('results'),ad=host.querySelector('[data-placement="inline"]');
-  for(const child of [...host.children])if(child!==ad)child.remove();
+  for(const child of [...host.children])if(child!==ad&&!['listTopAd','mapTopAd'].includes(child.id))child.remove();
   const template=document.createElement('template');template.innerHTML=markup;let count=0;
   for(const child of [...template.content.children]){if(child.matches('.center-card'))count++;if(ad&&count<=6)host.insertBefore(child,ad);else host.append(child);}
 }
