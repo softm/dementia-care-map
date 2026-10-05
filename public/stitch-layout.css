@@ -122,3 +122,24 @@ body.reading-list[data-care-mode=map] .scope-note,body.reading-list[data-care-mo
  body.reading-list[data-care-mode=map] .card-map-link{min-height:36px;margin-top:4px}
 }
 @media(max-width:760px){body.reading-list[data-care-mode=map] .tags{display:flex}}
+
+/* 일반 목록에서도 읽는 동안 조건 영역을 접고 복귀 버튼을 유지한다. */
+body[data-care-mode=list] #readingToggle{display:block}
+body.reading-list[data-care-mode=list] .search-panel,
+body.reading-list[data-care-mode=list] .list-location-actions,
+body.reading-list[data-care-mode=list] .scope-note{display:none}
+body.reading-list[data-care-mode=list] .results-header{position:sticky;top:0;z-index:20;background:var(--cream,#f2fbf9);padding:8px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+body.reading-list[data-care-mode=list] .results-header h2{margin:0}
+body.reading-list[data-care-mode=list] .results-header #sortLabel{margin-left:auto}
+@media(max-width:760px){
+ body.reading-list[data-care-mode=map] .mobile-results-sheet .results{flex:1 1 0;min-height:0;overflow-y:auto}
+ body.reading-list[data-care-mode=list] .center-card{padding:16px}
+ body.reading-list[data-care-mode=list] .card-top{margin-bottom:8px}
+ body.reading-list[data-care-mode=list] .card-actions{margin-top:10px}
+}
+@media(max-width:760px){
+ body.reading-list[data-care-mode=map] .center-card{padding:14px;margin-bottom:10px}
+ body.reading-list .center-card .card-open{gap:6px}
+ body.reading-list .center-card .tags{padding:10px;margin-top:6px;gap:6px}
+ body.reading-list[data-care-mode=map] .card-actions>*{min-height:44px}
+}

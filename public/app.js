@@ -1,8 +1,8 @@
 import {initializeLayout} from './stitch-layout.js?v=20261003-review';
 import {initializeMobileSheet,revealMobileSheet} from './mobile-sheet.js';
-import {initializeStitchUI,syncStitchLayout} from './stitch-ui.js?v=20261003-reading';
+import {initializeStitchUI,syncStitchLayout} from './stitch-ui.js?v=20261005-reading';
 import {icon as uiIcon,labelButton,enhanceDetail} from './ui-icons.js?v=20261003-review';
-import {mountAd,syncAds} from './care-ads.js?v=20261003-reading';
+import {mountAd,syncAds} from './care-ads.js?v=20261005-reading';
 import './map-marker-placement.js';
 import './map-marker-labels.js';
 import {TYPES,CARE_TYPES,escapeHTML as esc,validLocation,distance,filterCenters,readState,stateURL,centerURL,careURL,safeWebsite,loadJSON} from './core.js?v=20261001-modes-ads';
