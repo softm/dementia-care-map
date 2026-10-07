@@ -20,3 +20,16 @@ body #results .card-actions .ui-icon{width:21px;height:21px;flex:0 0 21px}
 body #results .center-card:is(.selected,.scroll-current){border-color:#175cb5;box-shadow:0 0 0 2px #175cb529,0 4px 16px #0f615710}
 @media(max-width:760px){body[data-care-mode=map] #results .center-card{padding:14px;border-radius:18px}body[data-care-mode=map] #results .card-top{margin-bottom:6px;gap:5px}body[data-care-mode=map] #results .card-heading h3{font-size:19px;margin-bottom:6px}body[data-care-mode=map] #results .card-actions{margin-top:10px;gap:6px}body[data-care-mode=map] #results .card-actions>*{min-height:48px;flex-direction:row;font-size:12px!important}body[data-care-mode=map] #results .card-actions .ui-icon{width:16px;height:16px;flex-basis:16px}}
 body.large-text #results .card-heading h3{font-size:28px}body.large-text #results .card-address,body.large-text #results .tags span{font-size:20px!important}body.large-text #results .card-actions{grid-template-columns:1fr}body.large-text #results .card-actions>*{font-size:22px!important;min-height:62px}
+/* 지도 옆 목록은 큰글씨에서도 한 카드가 목록 전체를 차지하지 않도록 구성. */
+body[data-care-mode=map] #results .center-card{padding:14px}
+body[data-care-mode=map] #results .card-top{margin-bottom:8px}
+body[data-care-mode=map] #results .tags{padding:8px;margin-top:8px}
+body[data-care-mode=map] #results .card-actions{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:10px}
+body[data-care-mode=map] #results .card-actions>*{flex-direction:row;min-height:44px;padding:8px 4px;font-size:13px!important;gap:4px}
+body[data-care-mode=map] #results .card-actions .ui-icon{width:17px;height:17px;flex:0 0 17px}
+body.large-text[data-care-mode=map] #results .card-heading h3{font-size:23px!important;line-height:1.35;margin-bottom:6px}
+body.large-text[data-care-mode=map] #results .card-address{font-size:17px!important;line-height:1.5}
+body.large-text[data-care-mode=map] #results .tags span{font-size:16px!important;padding:4px 6px}
+body.large-text[data-care-mode=map] #results .card-actions>*{font-size:16px!important;min-height:48px!important}
+@media(max-width:359px){body.large-text[data-care-mode=map] #results .card-actions .ui-icon{display:none}}
+body.large-text[data-care-mode=map] #results .card-actions [data-card-detail]{grid-column:auto}
