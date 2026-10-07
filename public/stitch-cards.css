@@ -1,0 +1,22 @@
+/* Stitch 9278473149944686283 / 338d1b6aec584a68a561183f11493b5d.
+   홈 목록의 둥근 카드·배지·프로그램 패널·세 가지 행동 버튼을 실데이터에 적용. */
+body #results .center-card{padding:20px;border:1px solid #e0e9e5;border-radius:20px;background:#fff;box-shadow:0 4px 16px #0f615710}
+body #results .card-top{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+body #results .badge{border-radius:7px;padding:6px 9px;background:#e5f3ef;color:#004840;font-size:12px;font-weight:700}
+body #results .status-unknown{padding:5px 7px;border-radius:7px;background:#f3f6f4;color:#62736d;font-size:11px}
+body #results .save-center{margin-left:auto;flex-shrink:0;width:40px;height:40px;border-radius:50%}
+body #results .card-heading h3{font-size:22px;font-weight:800;letter-spacing:-.6px;line-height:1.4;margin:0 0 8px}
+body #results .card-address{font-size:14px!important;line-height:1.55;margin:0 0 8px;color:#4c625c}
+body #results .distance{font-size:12px;color:#0f6157;font-weight:700}
+body #results .tags{padding:12px;border-radius:12px;background:#f1f6f3;gap:6px;margin-top:12px}
+body #results .tags strong{font-size:12px;color:#647a71;width:100%;margin-bottom:3px}
+body #results .tags span{background:#fff;border:0;border-radius:8px;padding:6px 8px;color:#354c43;font-size:12px;box-shadow:0 1px 3px #163f2c0a}
+body #results .card-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
+body #results .card-actions>a,body #results .card-actions>button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:54px;padding:9px 4px;border:0;border-radius:12px;font-size:14px!important;font-weight:700;line-height:1.3}
+body #results .card-actions [data-card-call]{background:#ad491f!important;color:#fff!important}
+body #results .card-actions>a{background:#004840!important;color:#fff!important}
+body #results .card-actions [data-card-detail]{background:#eaf2ee!important;color:#004840!important}
+body #results .card-actions .ui-icon{width:21px;height:21px;flex:0 0 21px}
+body #results .center-card:is(.selected,.scroll-current){border-color:#175cb5;box-shadow:0 0 0 2px #175cb529,0 4px 16px #0f615710}
+@media(max-width:760px){body[data-care-mode=map] #results .center-card{padding:14px;border-radius:18px}body[data-care-mode=map] #results .card-top{margin-bottom:6px;gap:5px}body[data-care-mode=map] #results .card-heading h3{font-size:19px;margin-bottom:6px}body[data-care-mode=map] #results .card-actions{margin-top:10px;gap:6px}body[data-care-mode=map] #results .card-actions>*{min-height:48px;flex-direction:row;font-size:12px!important}body[data-care-mode=map] #results .card-actions .ui-icon{width:16px;height:16px;flex-basis:16px}}
+body.large-text #results .card-heading h3{font-size:28px}body.large-text #results .card-address,body.large-text #results .tags span{font-size:20px!important}body.large-text #results .card-actions{grid-template-columns:1fr}body.large-text #results .card-actions>*{font-size:22px!important;min-height:62px}
