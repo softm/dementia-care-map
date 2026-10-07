@@ -133,7 +133,7 @@ function applyPendingLocation(){
   render();toast('현재 위치를 기준으로 센터를 찾았습니다.');
 }
 async function locate(initial=false){
-  const request=++locationRequest;$('locate').disabled=true;$('locate').textContent='위치 확인 중…';CareLocation.hideNotice();
+  const request=++locationRequest;$('locate').disabled=true;labelButton('locate','locate','위치 확인 중…');$('locate').setAttribute('aria-busy','true');CareLocation.hideNotice();
   try{
     // 초기 권한 요청과 조회를 공유한다. 이미 허용된 경우에도 즉시 위치를 읽는다.
     const initialResult=initial?await window.CareInitialLocation:null;
@@ -143,8 +143,8 @@ async function locate(initial=false){
     if(request!==locationRequest)return;
     if(!validLocation(point)){toast('국내 지역을 선택해 센터를 찾아주세요.');return;}
     pendingLocation={point,request};applyPendingLocation();
-  }catch(error){if(request===locationRequest)CareLocation.showNotice(error,()=>locate());}
-  finally{$('locate').disabled=false;labelButton('locate','locate','내 위치');}
+  }catch(error){if(request===locationRequest){if(initial)toast('현재 위치를 확인하지 못했습니다. 지역·센터명으로 검색하거나 내 위치를 다시 눌러주세요.');else CareLocation.showNotice(error,()=>locate());}}
+  finally{$('locate').removeAttribute('aria-busy');$('locate').disabled=false;labelButton('locate','locate','내 위치');}
 }
 async function start(){
   const useInitialLocation=!isList()&&!state.location&&!state.center&&!state.q&&!state.province&&!state.city&&!state.program;

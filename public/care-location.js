@@ -24,18 +24,23 @@
         const policy = env.document?.permissionsPolicy || env.document?.featurePolicy;
         if (policy?.allowsFeature && !policy.allowsFeature('geolocation')) return Promise.reject(failure('policy'));
         if (!env.navigator?.geolocation) return Promise.reject(failure('unsupported'));
-        const attempt = enableHighAccuracy => new Promise((resolve, reject) => {
+        // 브라우저가 권한 응답을 기다려 자체 timeout을 시작하지 않아도 UI 대기는 종료한다.
+        return new Promise((resolve, reject) => {
+            let settled = false;
+            const finish = (error, point) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                if (error) reject(error); else resolve(point);
+            };
+            const timer = setTimeout(() => finish(failure('timeout')), 8000);
             try {
                 env.navigator.geolocation.getCurrentPosition(position => {
                     const point = { lat: position.coords.latitude, lng: position.coords.longitude };
-                    if (!Number.isFinite(point.lat) || !Number.isFinite(point.lng) || Math.abs(point.lat) > 90 || Math.abs(point.lng) > 180) reject(failure('unavailable'));
-                    else resolve(point);
-                }, error => reject(failure(reasonFor(error))), { enableHighAccuracy, timeout: enableHighAccuracy ? 20000 : 15000, maximumAge: 60000 });
-            } catch (error) { reject(failure(error.name === 'SecurityError' ? 'denied' : 'unavailable')); }
-        });
-        return attempt(false).catch(error => {
-            if (!isCurrent() || !['timeout', 'unavailable'].includes(error.reason)) throw error;
-            return attempt(true);
+                    if (!Number.isFinite(point.lat) || !Number.isFinite(point.lng) || Math.abs(point.lat) > 90 || Math.abs(point.lng) > 180) finish(failure('unavailable'));
+                    else finish(null, point);
+                }, error => finish(failure(reasonFor(error))), { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 });
+            } catch (error) { finish(failure(error.name === 'SecurityError' ? 'denied' : 'unavailable')); }
         });
     }
     /** SOFTM-LOCATION-DIALOG START 날짜:20260909 : 위치 실패 안내를 설정 방법과 복구 동작이 있는 모달로 제공 */
