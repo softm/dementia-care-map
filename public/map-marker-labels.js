@@ -84,6 +84,12 @@
             /** SOFTM-MARKER-PLACEMENT END */
         }
         const schedule = () => { clearTimeout(timer); timer=setTimeout(layout,100); };
+        // 큰글씨 전환도 지명 라벨의 실측 크기를 바꾸므로 충돌 위치를 다시 계산한다.
+        let largeText = document.body.classList.contains('large-text');
+        new MutationObserver(() => {
+            const next = document.body.classList.contains('large-text');
+            if (next !== largeText) { largeText = next; schedule(); }
+        }).observe(document.body,{attributes:true,attributeFilter:['class']});
         new MutationObserver(records=>{
             if(records.some(record=>!record.target.closest?.('.marker-name'))) schedule();
         }).observe(host,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});

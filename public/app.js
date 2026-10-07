@@ -5,7 +5,7 @@ import {initializeStitchUI,syncStitchLayout} from './stitch-ui.js?v=20261007-map
 import {icon as uiIcon,labelButton,enhanceDetail} from './ui-icons.js?v=20261003-review';
 import {mountAd,syncAds} from './care-ads.js?v=20261007-map';
 import './map-marker-placement.js';
-import './map-marker-labels.js';
+import './map-marker-labels.js?v=20261007-type';
 import {TYPES,CARE_TYPES,escapeHTML as esc,validLocation,distance,filterCenters,readState,stateURL,centerURL,careURL,safeWebsite,loadJSON} from './core.js?v=20261001-modes-ads';
 
 // SOFTM-DEMENTIA-APP START 날짜:20261001 : 데이터·현재 검색·선택 센터 상태를 분리해 늦은 응답이 화면을 덮지 않도록 한다.
