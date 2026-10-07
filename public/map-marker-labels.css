@@ -7,6 +7,6 @@
 .care-label-context .care-marker-overview{display:block;margin-top:4px;color:var(--green);font-size:11px;font-weight:600}
 .care-label-insight .care-marker-detail{display:block;margin-top:4px;padding-top:4px;border-top:1px solid var(--line);font-size:11px;font-weight:500;color:var(--muted)}
 .named-marker.active .marker-name{border:2px solid var(--green)}
-.care-compact-markers .named-marker:not(.active) .map-pin{width:14px;height:14px;position:absolute;left:8px;top:16px;border:2px solid white;border-radius:50%;transform:none;box-shadow:0 1px 3px #163f2c40}
+.care-compact-markers .named-marker:not(.active) .map-pin{width:14px;height:14px;position:absolute;left:8px;top:16px;border:2px solid white;border-radius:50%;transform:none;box-shadow:0 0 0 1px #202b3b99,0 2px 5px #0008}
 .care-compact-markers .named-marker:not(.active) .map-pin b{display:none}
 @media(max-width:760px){.marker-name.care-label-context{width:200px;max-width:200px}}
