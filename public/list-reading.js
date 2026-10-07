@@ -1,4 +1,4 @@
-import {setMobileSheet} from './mobile-sheet.js';
+import {setMobileSheet} from './mobile-sheet.js?v=20261007-map';
 // 목록 읽기 상태는 화면 안에서만 유지한다. 검색·지도 복귀는 사용자가 선택한다.
 export function initializeListReading(){
  const body=document.body,results=document.getElementById('results'),form=document.getElementById('searchForm');

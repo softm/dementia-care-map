@@ -1,8 +1,9 @@
+import {initializeMapExperience} from './mobile-map-experience.js?v=20261007';
 import {initializeLayout} from './stitch-layout.js?v=20261003-review';
-import {initializeMobileSheet,revealMobileSheet} from './mobile-sheet.js';
-import {initializeStitchUI,syncStitchLayout} from './stitch-ui.js?v=20261005-reading';
+import {initializeMobileSheet,revealMobileSheet} from './mobile-sheet.js?v=20261007-map';
+import {initializeStitchUI,syncStitchLayout} from './stitch-ui.js?v=20261007-map';
 import {icon as uiIcon,labelButton,enhanceDetail} from './ui-icons.js?v=20261003-review';
-import {mountAd,syncAds} from './care-ads.js?v=20261005-reading';
+import {mountAd,syncAds} from './care-ads.js?v=20261007-map';
 import './map-marker-placement.js';
 import './map-marker-labels.js';
 import {TYPES,CARE_TYPES,escapeHTML as esc,validLocation,distance,filterCenters,readState,stateURL,centerURL,careURL,safeWebsite,loadJSON} from './core.js?v=20261001-modes-ads';
@@ -65,7 +66,7 @@ function render(){
   const missing=visible.filter(r=>!validLocation(r.location)).length;
   $('scopeNote').textContent=(!isList()&&viewBounds?'현재 지도 영역의 결과입니다.':'선택한 조건의 전체 결과입니다.')+(missing?` 위치 미확인 ${missing}곳은 목록에서 확인하세요.`:'')+(state.program?' 원자료에 명시된 프로그램 기준입니다.':'');
   $('mapLabel').textContent=[state.province||'전국',state.city,TYPES[state.type]||'치매센터'].filter(Boolean).join(' ');
-  if(!visible.length){renderResults('<div class="empty"><strong>찾은 센터가 없습니다.</strong><br>검색어나 지역·지도 범위를 넓혀 보세요.<br><button id="emptyReset">전체 센터 보기</button></div>');$('emptyReset').onclick=reset;revealMobileResults();}
+  if(!visible.length){renderResults('<div class="empty"><strong>찾은 센터가 없습니다.</strong><br>검색어나 지역·지도 범위를 넓혀 보세요.<br><button id="emptyReset">전체 센터 보기</button></div>');$('emptyReset').onclick=reset;}
   else{
     renderResults(visible.slice(0,pageSize).map((r,index)=>{const d=base?distance(base,r.location):Infinity;return `<article class="center-card ${r.id===selected?'selected':''}" data-id="${esc(r.id)}"><div class="card-top"><span class="badge ${r.type}">${TYPES[r.type]}</span><span class="status-unknown">운영시간 미확인</span><button class="save-center" data-save="${esc(r.id)}" aria-label="${esc(r.name)} 즐겨찾기" aria-pressed="${saved.has(r.id)}">${uiIcon('heart')}</button></div><button type="button" class="card-open" aria-label="${esc(r.name)} 상세정보"><div class="card-heading"><h3>${esc(r.name)}</h3></div><p class="card-address">${uiIcon('pin')}<span>${esc(r.address)||'주소 미확인'}</span></p><span class="distance">${Number.isFinite(d)?`직선 ${d.toFixed(1)}km`:!r.location?'위치 미확인':''}</span><div class="tags"><strong>공개 프로그램 정보</strong>${r.programTags.length?r.programTags.map(t=>`<span>${esc(t)}</span>`).join(''):'<span>미확인 · 센터에 문의하세요</span>'}</div></button><div class="card-actions"><button type="button" data-card-call="${esc(r.id)}">${uiIcon('phone')}전화상담</button><a href="${esc(directionsURL(r))}" target="_blank" rel="noopener">${uiIcon('map')}길찾기</a><button type="button" data-card-detail="${esc(r.id)}">상세보기</button></div><button class="card-map-link" data-card-map="${esc(r.id)}">${uiIcon('pin')} 지도에서 보기</button></article>`;}).join('')+(visible.length>pageSize?`<button class="more" id="more">센터 더 보기 (${Math.min(pageSize,visible.length)} / ${visible.length})</button>`:''));
     $('results').querySelectorAll('.center-card').forEach(card=>card.onclick=async event=>{
@@ -202,6 +203,7 @@ function initializeUI(){
  document.querySelectorAll('[data-mode]').forEach(button=>{button.innerHTML=uiIcon(button.dataset.mode)+`<span>${button.dataset.mode==='list'?'목록 보기':'지도 보기'}</span>`;button.onclick=()=>setMode(button.dataset.mode);});
  $('listLocate').onclick=async()=>{await setMode('map');if(userPosition||state.location||state.q||state.province||state.city)void locate();};
  $('shareList').onclick=()=>share(stateURL({...state,scope:'all',location:null},location.origin),'치매안심 검색 결과');
+ initializeMapExperience();
  syncModeUI();
 }
 // SOFTM-DEMENTIA-MODES END

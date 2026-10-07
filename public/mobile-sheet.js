@@ -1,6 +1,6 @@
 // 돌봄한눈 map-experience.js의 4단계 시트·45px 드래그·포인터 캡처 방식을 적용.
 const states=['focus','map','split','list'];
-let state='split',drag=null,ignoreClick=false;
+let state='focus',drag=null,ignoreClick=false;
 const active=()=>matchMedia('(max-width:760px)').matches&&document.body.dataset.careMode==='map';
 export function setMobileSheet(next){
  if(!states.includes(next))return;

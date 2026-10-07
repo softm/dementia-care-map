@@ -1,5 +1,13 @@
 // SOFTM-DEMENTIA-UI 날짜:20261001 : 돌봄한눈처럼 동작별 선형 SVG 아이콘과 텍스트를 함께 제공.
 const paths={
+ back:'m15 5-7 7 7 7',
+ layers:'m3 7 9-5 9 5-9 5-9-5Zm0 5 9 5 9-5M3 17l9 5 9-5',
+ filter:'M3 6h4M11 6h10M3 12h10M17 12h4M3 18h6M13 18h8M7 3v6M13 9v6M9 15v6',
+ fit:'M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5M12 8v8M8 12h8',
+ region:'M4 3h10v18H4V3ZM14 9h6v12M7 7h4M7 11h4M7 15h4M8 21v-3h2v3',
+ branch:'M12 3v18M4 6h12l4 3-4 3H4V6ZM8 15h12v5H8l-4-2.5L8 15Z',
+ more:'M5 12h.01M12 12h.01M19 12h.01',
+ plus:'M12 5v14M5 12h14',minus:'M5 12h14',
  map:'m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6ZM9 3v15M15 6v15',
  list:'M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01',
  search:'M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0',
