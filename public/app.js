@@ -47,7 +47,7 @@ function updateMarkers(list){if(!map||isList())return;
   const count=list.filter(row=>validLocation(row.location)&&row.location.lat>=bounds.south&&row.location.lat<=bounds.north&&row.location.lng>=bounds.west&&row.location.lng<=bounds.east).length;
   const limit=Math.max(12,Math.min(80,Math.floor(host.clientWidth*host.clientHeight/9000)));
   host.classList.toggle('care-compact-markers',count>limit);
-  const ids=new Set(list.map(r=>r.id));for(const [id,marker] of markers){if(!ids.has(id)){marker.setMap(null);naver.maps.Event.clearInstanceListeners(marker);markers.delete(id);}}list.forEach((row,i)=>{if(!validLocation(row.location))return;let marker=markers.get(row.id);if(!marker){marker=new naver.maps.Marker({map,position:latLng(row.location),icon:icon(row),title:row.name});naver.maps.Event.addListener(marker,'click',()=>selectMapCenter(row.id));markers.set(row.id,marker);}else marker.setIcon(icon(row));marker.setZIndex(row.id===selected?1000:1);});}
+  const ids=new Set(list.map(r=>r.id));for(const [id,marker] of markers){if(!ids.has(id)){marker.setMap(null);naver.maps.Event.clearInstanceListeners(marker);markers.delete(id);}}list.forEach((row,i)=>{if(!validLocation(row.location))return;let marker=markers.get(row.id);if(!marker){marker=new naver.maps.Marker({map,position:latLng(row.location),icon:icon(row),title:row.name});naver.maps.Event.addListener(marker,'click',()=>selectMapCenter(row.id));markers.set(row.id,marker);}else marker.setIcon(icon(row));marker.setZIndex(row.id===selected?4500:1);});}
 function renderResults(markup){
   const host=$('results'),ad=host.querySelector('[data-placement="inline"]');
   for(const child of [...host.children])if(child!==ad&&!['listTopAd','mapTopAd'].includes(child.id))child.remove();
@@ -74,7 +74,7 @@ function render(){
       if(event.target.closest('a'))return;
       if(event.target.closest('[data-save]')){saved.has(id)?saved.delete(id):saved.add(id);try{sessionStorage.setItem('dementiaSavedCenters',JSON.stringify([...saved]));}catch{}render();return;}
       const call=event.target.closest('[data-card-call]');if(call){void callCenter(id,call);return;}
-      if(event.target.closest('[data-card-map]')){await setMode('map');const row=rows.find(r=>r.id===id);selected=id;if(map&&validLocation(row.location))internal(()=>setView(row.location,15));updateMarkers(visible);revealMobileResults();return;}
+      if(event.target.closest('[data-card-map]')){await setMode('map');const row=rows.find(r=>r.id===id);selected=id;if(map&&validLocation(row.location))internal(()=>setView(row.location,15));render();revealMobileResults();return;}
       if(event.target.closest('button'))openDetail(id,true);
     });
     if($('more'))$('more').onclick=()=>{const top=$('results').scrollTop;pageSize+=40;render();$('results').scrollTop=top;};
