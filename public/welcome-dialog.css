@@ -1,0 +1,10 @@
+/* SOFTM-WELCOME 날짜:20261007 : 모바일과 PC에서 첫 방문 안내를 중앙 모달로 표시한다. */
+.welcome-ad-dialog{box-sizing:border-box;border:0;border-radius:22px;padding:0;width:min(364px,calc(100vw - 28px));max-height:calc(100dvh - 28px);overflow:auto;background:#fff;color:#172d29;box-shadow:0 24px 80px #061b3173}
+.welcome-ad-dialog::backdrop{background:#091b2f85}
+.welcome-ad-content{padding:22px;text-align:center}
+.welcome-ad-content h2{margin:0 0 8px;font-size:21px;line-height:1.5;letter-spacing:-.7px}
+.welcome-ad-content p{margin:0 0 16px;color:#667b87;font-size:13px;line-height:1.55}
+.welcome-ad-host{width:320px;max-width:100%;min-height:100px;margin:auto}
+.welcome-ad-host[hidden]{display:none}
+.welcome-ad-close{margin-top:14px;border:0;border-radius:10px;min-height:44px;padding:10px 16px;background:#e9f0f7;color:#29465f;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.welcome-ad-close:focus-visible{outline:3px solid #17695b;outline-offset:3px}
