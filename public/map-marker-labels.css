@@ -11,7 +11,8 @@
 .care-compact-markers .named-marker:not(.active) .map-pin b{display:none}
 @media(max-width:760px){.marker-name.care-label-context{width:200px;max-width:200px}}
 
-/* 돌봄한눈의 선택 마커·기관명 강조: 유형 색은 유지하고 선택 윤곽만 파란색으로 구분. */
-#map .named-marker.active .map-pin{outline:2px solid #fff;box-shadow:0 0 0 4px #175cb5,0 5px 12px #0b315f80}
-#map .named-marker.active .marker-name{width:220px;max-width:220px;padding:7px 10px;border:2px solid #175cb5;border-radius:9px;background:#eff6ff;color:#084baf;font-size:17px;font-weight:800;line-height:1.4;box-shadow:0 0 0 2px #fff,0 4px 12px #123e6b66}
-#map .named-marker.active .care-marker-title{color:#084baf;font-size:17px;font-weight:800;line-height:1.4}
+/* 목록 스크롤로 따라가는 센터만 강조한다. */
+#map .scroll-focused .map-pin{outline:2px solid #fff;box-shadow:0 0 0 4px #175cb5,0 5px 12px #0b315f80}
+#map .scroll-focused .marker-name{width:220px;max-width:220px;padding:7px 10px;border:2px solid #175cb5;background:#eff6ff;box-shadow:0 0 0 2px #fff,0 4px 12px #123e6b66}
+#map .scroll-focused .care-marker-title{color:#084baf;font-size:17px;font-weight:800;line-height:1.4}
+.center-card.scroll-current{border-color:#175cb5;box-shadow:0 0 0 2px #175cb533}

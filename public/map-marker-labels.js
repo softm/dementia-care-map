@@ -30,7 +30,7 @@
             if (!bounds.width || !bounds.height) return;
             const compact = host.classList.contains('care-compact-markers');
             const level = detailLevel(map.getZoom());
-            // 축소 상태에서도 선택한 센터의 이름은 배치한다.
+            if (compact && level === 0 && !host.querySelector('.scroll-focused')) return;
             const intersects = rect => rect.width && rect.height && rect.right > bounds.left && rect.left < bounds.right && rect.bottom > bounds.top && rect.top < bounds.bottom;
             const pins = [...host.querySelectorAll('.map-pin')].map(node=>node.getBoundingClientRect()).filter(intersects);
             const controls = [...host.parentElement.querySelectorAll('.map-top button,.map-label,.map-legend,.help-card,.mobile-toggle,.map-error,.area-button,.care-location-state')].map(node=>node.getBoundingClientRect()).filter(intersects); // SOFTM-MARKER-PLACEMENT 날짜:20260930 : 전체 지도에서 실제 버튼이 옮긴 기관명을 가리지 않도록 실측
@@ -70,7 +70,7 @@
                     occupied.set(item,item.placement.rect);
                     if (!item.selected) remaining--;
                 } else if (item.selected) {
-                    setLevel(item.label,0);
+                    if(item.label.closest('.scroll-focused'))setLevel(item.label,0);
                     occupied.set(item,item.label.getBoundingClientRect());
                 }
             }
