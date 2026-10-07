@@ -1,7 +1,7 @@
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');const assert=require('node:assert/strict');
 (async()=>{const browser=await chromium.launch({headless:true,channel:'chrome'});const page=await browser.newPage({viewport:{width:1440,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
 try{
- await page.goto('http://localhost:3100/?mode=list');await page.locator('.center-card').first().waitFor();assert.equal(await page.locator('.brand img').getAttribute('src'),'stitch-logo.svg?v=20261007-heart');
+ await page.goto('http://localhost:3100/?mode=list');await page.locator('.center-card').first().waitFor();assert.equal(await page.locator('.brand img').getAttribute('src'),'stitch-logo.svg?v=20261007-copper');
  await page.locator('.bottom-ad-toggle').click();await page.screenshot({path:'test-results/stitch-desktop.png'});
  await page.locator('#q').fill('광명');await page.locator('#searchForm').evaluate(n=>n.requestSubmit());await page.locator('.center-card').first().scrollIntoViewIfNeeded();await page.screenshot({path:'test-results/stitch-results-desktop.png'});
  for(const width of [390,320]){
