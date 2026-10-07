@@ -40,6 +40,7 @@ function icon(row){
   return {content:`<div class="named-marker ${active?'active':''} ${row.id===scrollFocusId?'scroll-focused':''}" data-marker-id="${esc(row.id)}"><div class="marker-name"><span class="care-marker-title">${esc(row.name)}</span><span class="care-marker-fact care-marker-overview">${esc(overview)}</span><span class="care-marker-fact care-marker-detail">${esc(detail)}</span></div><button type="button" aria-label="${esc(row.name)}" class="map-pin ${row.type} ${active?'active':''}"><b>${markerLabel}</b></button></div>`,size:new naver.maps.Size(active?43:30,active?43:30),anchor:new naver.maps.Point(active?21:15,active?43:30)};
 }
 function selectMapCenter(id){
+ if(id===(scrollFocusId||selected)){void openDetail(id,true);return;}
  clearScrollFocus();
  selected=id;pageSize=Math.max(pageSize,visible.findIndex(row=>row.id===id)+1);revealMobileResults();render();
  const card=[...document.querySelectorAll('.center-card')].find(el=>el.dataset.id===id);if(card)card.scrollIntoView({block:'nearest',inline:'start',behavior:'smooth'});
