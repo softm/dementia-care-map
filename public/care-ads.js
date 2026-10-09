@@ -1,5 +1,5 @@
 import {syncBottomAd} from './care-bottom-ad.js?v=20261007-map';
-import {AD_CONFIG as config} from './ad-config.js?v=20261001-bottom';
+import {AD_CONFIG as config, NATIVE_ADS} from './ad-config.js?v=20261010-admob';
 // SOFTM-DEMENTIA-ADS START 날짜:20261001 : 실제 보이는 슬롯만 요청하고 목록 재조회는 광고를 재발급하지 않는다.
 const cache=new Map(),mounts=new Map();let serial=0;
 const production=location.hostname===config.domain;
@@ -24,6 +24,7 @@ function slotNode(placement,slot){
  return node;
 }
 export function mountAd(host,placement){
+ if(NATIVE_ADS){if(host)host.hidden=true;return;}
  if(!host||!config.placements[placement])return;
  for(const node of mounts.keys())if(!node.isConnected)mounts.delete(node);
  mounts.set(host,placement);
@@ -31,6 +32,10 @@ export function mountAd(host,placement){
  const node=slotNode(placement,slot);if(host.firstElementChild!==node)host.replaceChildren(node);
 }
 export function syncAds(mode){
+ if(NATIVE_ADS){
+  for(const id of ['listTopAd','mapTopAd','bottomAd']){const host=document.getElementById(id);if(host)host.hidden=true;}
+  return;
+ }
  syncBottomAd(mode,mountAd);
  const results=document.getElementById('results');const cards=results.querySelectorAll('.center-card');
  const listAd=document.getElementById('listTopAd'),mapAd=document.getElementById('mapTopAd');

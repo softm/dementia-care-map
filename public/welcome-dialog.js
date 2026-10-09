@@ -1,4 +1,4 @@
-import {AD_CONFIG} from './ad-config.js?v=20261001-bottom';
+import {AD_CONFIG} from './ad-config.js?v=20261010-admob';
 
 // SOFTM-WELCOME START 날짜:20261007 : 돌봄한눈과 동일하게 탭 첫 방문과 진입 모드에 맞춰 안내한다.
 const storageKey='dementiaWelcomeAdShown';

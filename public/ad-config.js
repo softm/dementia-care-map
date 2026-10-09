@@ -1,6 +1,8 @@
+// Android WebView uses a native AdMob banner instead of web ad placements.
+export const NATIVE_ADS = /\bAdMobNative\/1\b/.test(globalThis.navigator?.userAgent || '');
 // SOFTM-DEMENTIA-ADS 날짜:20261001 : AdFit에서 실제 발급한 치매안심 전용 매체·단위만 사용.
 export const AD_CONFIG=Object.freeze({
- media:'NyJ',domain:'dementia.designboard.net',enabled:true,
+ media:'NyJ',domain:'dementia.designboard.net',enabled:!NATIVE_ADS,
  script:'https://t1.kakaocdn.net/kas/static/ba.min.js',
  placements:{
   bottom:{desktop:{unit:'DAN-rfoZb8eMWWYs5Q1D',width:728,height:90},mobile:{unit:'DAN-BbGFyX8or3bjm3FR',width:320,height:100}},
