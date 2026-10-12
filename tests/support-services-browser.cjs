@@ -5,11 +5,10 @@ const path=require('node:path');
 const origin=process.env.TEST_ORIGIN||'http://127.0.0.1:3100';
 
 const details=fs.readdirSync('data/dementia/details').map(name=>JSON.parse(fs.readFileSync(path.join('data/dementia/details',name),'utf8')));
-const confirmed=details.find(center=>center.phone&&center.supportTags.length>=3);
-const unknown=details.find(center=>center.phone&&!center.supportTags.length);
+const center=details.find(item=>item.phone);
 
 (async()=>{
- assert.ok(confirmed&&unknown);
+ assert.ok(center);assert.ok(details.every(item=>!('supportTags' in item)&&!('supportEvidence' in item)));
  const browser=await chromium.launch({headless:true,channel:'chrome'});
  const context=await browser.newContext({viewport:{width:1440,height:1000}});
  const page=await context.newPage();const requests=[];page.on('request',request=>{if(new URL(request.url()).pathname.startsWith('/data/'))requests.push(request.url());});
@@ -19,21 +18,20 @@ const unknown=details.find(center=>center.phone&&!center.supportTags.length);
    await page.locator('.welcome-ad-close').waitFor({state:'visible',timeout:5000});
    await page.locator('.welcome-ad-close').click();
   }catch{}
-  assert.equal(requests.length,2);assert.equal(await page.locator('.home-support-list span').count(),5);
-  await page.locator('#homeSupportGuide').click();await page.locator('#guideSupport').waitFor();assert.equal(await page.locator('#guideSupport .guide-support-cards article').count(),5);await page.locator('#closeGuide').click();
-  await page.goto(`${origin}/?mode=list&center=${confirmed.id}`);await page.locator('.support-status-list').waitFor();
-  assert.equal(await page.locator('.support-status-card').count(),5);assert.equal(await page.locator('.support-status-card.confirmed').count(),confirmed.supportTags.length);
-  assert.match(await page.locator('.support-status-card.confirmed').first().innerText(),/원문 확인.*기준일/s);
-  assert.equal(await page.locator('.support-evidence-trigger').count(),confirmed.supportTags.length);
-  const evidenceButton=page.locator('.support-evidence-trigger').first();const evidenceId=await evidenceButton.getAttribute('aria-controls');await evidenceButton.click();
-  const evidencePanel=page.locator(`#${evidenceId}`);await evidencePanel.waitFor();assert.ok(await evidencePanel.locator('mark').count());assert.equal(await evidencePanel.locator('blockquote').innerText(),confirmed.programs);assert.match(await evidencePanel.innerText(),/공개 원문에서 확인된 표현.*전체 프로그램 원문.*기준일/s);assert.equal(new URL(await evidencePanel.locator('a').getAttribute('href')).hostname,'www.data.go.kr');
+  assert.equal(requests.length,2);assert.equal(await page.locator('.home-support-list,.support-status-card,.support-evidence-trigger').count(),0);
+  assert.match(await page.locator('.home-support').innerText(),/센터별 지원 제공 여부를 표시하지 않습니다.*센터별 공개 데이터가 없으므로/s);
+  assert.equal((await page.locator('.home-support a').first().getAttribute('href')).startsWith('tel:18999988'),true);assert.equal(new URL(await page.locator('.home-support .support-guide-link, .home-support a[target="_blank"]').getAttribute('href')).hostname,'www.nid.or.kr');
+  await page.locator('#q').fill('광명');await page.locator('#searchForm').evaluate(form=>form.requestSubmit());assert.match(await page.locator('.center-card').first().innerText(),/광명/);
+  await page.locator('[data-mode="map"]').click();await page.waitForFunction(()=>document.querySelector('#map img'));assert.ok(await page.locator('.map-pin').count()>0);await page.locator('[data-mode="list"]').click();await page.locator('#reset').click();
+  await page.locator('#guideOpen').click();await page.locator('#guideSupport').waitFor();assert.match(await page.locator('#guideSupport').innerText(),/판정할 수 있는 공개 데이터가 없어.*제공·미제공 상태를 표시하지 않습니다/s);assert.equal(await page.locator('#guideSupport .support-actions a').count(),2);await page.locator('#closeGuide').click();
+  await page.goto(`${origin}/?mode=list&center=${center.id}`);await page.locator('#detailBody .support-inquiry').waitFor();
+  assert.match(await page.locator('#detailBody .support-inquiry').innerText(),/센터별 지원 제공 여부를 표시하지 않습니다.*센터별 공개 데이터가 없으며/s);
+  assert.equal(await page.locator('.support-status-card,.support-evidence-trigger').count(),0);
+  assert.equal(new URL(await page.locator('#detailBody .support-inquiry .support-guide-link').getAttribute('href')).hostname,'www.nid.or.kr');assert.equal((await page.locator('#detailBody .support-inquiry .support-call').getAttribute('href')).startsWith('tel:'),true);
   for(const width of [320,390,768,1440]){await page.setViewportSize({width,height:900});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));}
   await page.setViewportSize({width:320,height:900});await page.evaluate(()=>document.body.classList.add('large-text'));assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.evaluate(()=>document.body.classList.remove('large-text'));await page.setViewportSize({width:1440,height:1000});
-  await evidenceButton.click();assert.equal(await evidencePanel.isHidden(),true);
-  assert.equal(new URL(await page.locator('.support-guide-link').getAttribute('href')).hostname,'www.nid.or.kr');assert.equal((await page.locator('.support-call').getAttribute('href')).startsWith('tel:'),true);
-  await page.goto(`${origin}/?mode=list&center=${unknown.id}`);await page.locator('.support-status-list').waitFor();assert.equal(await page.locator('.support-status-card.confirmed').count(),0);assert.equal(await page.locator('.support-status-card.unknown').count(),5);assert.equal(await page.locator('.support-evidence-trigger').count(),0);assert.match(await page.locator('.support-status-list').innerText(),/미제공을 뜻하지 않습니다/);
   await page.setViewportSize({width:390,height:844});await page.locator('#detailDialog').evaluate(dialog=>dialog.scrollTop=0);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await page.locator('#closeDetail').click();await page.locator('#largeText').click();assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-  console.log(JSON.stringify({confirmed:confirmed.id,unknown:unknown.id,checks:['초기 요청 2개','홈 5종','확인·미확인 상태','원문 근거 펼침·접기','공식 링크·전화','모바일·큰글씨']},null,2));
+  console.log(JSON.stringify({center:center.id,checks:['초기 요청 2개','센터별 판정 제거','공개 데이터 한계 명시','검색·실제 지도·상세','공식 링크·전화','모바일·큰글씨']},null,2));
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exit(1);});
