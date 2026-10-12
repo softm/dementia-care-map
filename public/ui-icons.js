@@ -33,7 +33,7 @@ export function enhanceDetail(){
  const actions=host.querySelector('.detail-actions');
  actions.querySelectorAll('a,button').forEach(el=>{const text=el.textContent.replace(' ↗','');const name=el.matches('.call')?'phone':el.id==='shareCenter'?'share':el.id==='copyAddress'?'copy':text.includes('길찾기')?'map':'external';el.innerHTML=icon(name)+`<span>${text}</span>`;});
  const panels=document.createElement('div');panels.className='detail-panels';
- const definitions=[['basic','방문 안내'],['programs','공개 프로그램'],['care','주변 돌봄'],['sources','자료 출처']];
+ const definitions=[['basic','방문 안내'],['programs','프로그램·지원'],['care','주변 돌봄'],['sources','자료 출처']];
  definitions.forEach(([key,label])=>{const panel=document.createElement('section');panel.id=`detailPanel-${key}`;panel.setAttribute('aria-label',label);panels.append(panel);});
  const metadata=[...host.querySelectorAll(':scope > .detail-meta')];
  for(const el of metadata.reverse())hero.append(el);
