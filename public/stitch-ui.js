@@ -1,5 +1,5 @@
 import {initializeListReading} from './list-reading.js?v=20261007-map';
-import {initializeGuide} from './stitch-guide.js?v=20261012-support';
+import {initializeGuide} from './stitch-guide.js?v=20261013-support-inquiry';
 // Stitch project 9278473149944686283 — 큰글씨 선택은 해당 탭에만 보관한다.
 export function initializeStitchUI(){
  initializeGuide();
