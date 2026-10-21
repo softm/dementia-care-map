@@ -11,7 +11,12 @@ function slotNode(placement,slot){
  const fallback=document.createElement('a');fallback.className='care-ad-fallback';fallback.href='mailto:softm@nate.com?subject='+encodeURIComponent('치매안심 광고·제휴 문의');fallback.innerHTML='<strong>지역의 돌봄을 연결하는 광고·제휴</strong><span>치매안심 이용자에게 서비스를 소개하세요 <b>문의하기 ↗</b></span>';
  body.append(fallback);node.append(label,body);cache.set(key,node);
  let attempted=false,timeout;
- const fail=()=>{clearTimeout(timeout);body.querySelector('ins')?.remove();fallback.hidden=false;node.dataset.state='fallback';};
+ const fail=()=>{
+  clearTimeout(timeout);
+  // 다른 규격을 초기화하며 숨겨 둔 배너에 NO-AD가 돌아와도 이미 수신한 iframe은 보존한다.
+  if(node.hidden&&body.querySelector('iframe')){node.dataset.state='filled';return;}
+  body.querySelector('ins')?.remove();fallback.hidden=false;node.dataset.state='fallback';
+ };
  const observer=new IntersectionObserver(entries=>{
   if(!entries.some(e=>e.isIntersecting)||attempted||!production||!config.enabled||document.hidden||body.clientWidth<slot.width)return;
   attempted=true;observer.disconnect();fallback.hidden=true;node.dataset.state='requested';
