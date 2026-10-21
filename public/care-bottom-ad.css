@@ -6,6 +6,7 @@
 #bottomAdPanel{width:100%;border-top:1px solid #c6d8d0;background:white;box-shadow:0 -3px 14px #173b371b}
 #bottomAdPanel[hidden]{display:none}
 #bottomAdHost{width:100%}#bottomAdHost .care-ad{border:0;border-radius:0;padding:4px 0 8px}#bottomAdHost .care-ad-body{min-height:100px}#bottomAdHost .care-ad-label{margin-bottom:2px}
+#bottomAdHost>.care-ad[hidden]{display:none}
 body .workspace{height:calc(100dvh - 64px - var(--bottom-ad-space,0px))}
 @media(max-width:760px){body .workspace{height:calc(100dvh - 60px - var(--bottom-ad-space,0px))}body[data-care-mode=map] .workspace{overflow:auto;flex-shrink:0}body[data-care-mode=map] .results{flex-basis:14dvh}}
 .toast{bottom:calc(var(--bottom-ad-space,0px) + 12px)}

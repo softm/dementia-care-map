@@ -1,5 +1,5 @@
 import {syncBottomAd} from './care-bottom-ad.js?v=20261007-map';
-import {AD_CONFIG as config, NATIVE_ADS} from './ad-config.js?v=20261010-admob';
+import {AD_CONFIG as config, NATIVE_ADS} from './ad-config.js?v=20261022-bottom-adfit';
 // SOFTM-DEMENTIA-ADS START 날짜:20261001 : 실제 보이는 슬롯만 요청하고 목록 재조회는 광고를 재발급하지 않는다.
 const cache=new Map(),mounts=new Map();let serial=0;
 const production=location.hostname===config.domain;
@@ -29,7 +29,12 @@ export function mountAd(host,placement){
  for(const node of mounts.keys())if(!node.isConnected)mounts.delete(node);
  mounts.set(host,placement);
  const specs=config.placements[placement];const slot=host.clientWidth>=752&&specs.desktop?specs.desktop:specs.mobile;
- const node=slotNode(placement,slot);if(host.firstElementChild!==node)host.replaceChildren(node);
+ const node=slotNode(placement,slot);
+ if(placement==='bottom'){
+  // 규격을 왕복해도 iframe을 문서에서 분리하지 않는다. 비활성 배너는 숨기고 첫 노출에서만 요청한다.
+  for(const child of host.children)child.hidden=child!==node;
+  node.hidden=false;if(node.parentNode!==host)host.append(node);
+ }else if(host.firstElementChild!==node)host.replaceChildren(node);
 }
 export function syncAds(mode){
  if(NATIVE_ADS){
