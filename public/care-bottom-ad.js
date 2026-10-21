@@ -1,13 +1,10 @@
-// SOFTM-BOTTOM-AD 날짜:20261001 : 돌봄한눈의 공용 하단 광고·세션 접힘·목록 읽기 중 임시 접힘 동작.
+// SOFTM-BOTTOM-AD 날짜:20261022 : PC·모바일 기본 펼침, 수동 선택의 세션 유지, 목록 읽기 중 임시 접힘.
 const storageKey='dementiaBottomAd:collapsed:v1';
-let zone,button,panel,host,mount,mode,expanded=true,reading=false,readingExpanded=false,mapFocused=false,focusExpanded=false;
+let zone,button,panel,host,mount,mode,expanded=true,reading=false,readingExpanded=false;
 window.addEventListener('care-reading-change',event=>{reading=event.detail.active;readingExpanded=false;if(zone)sync();});
-const visibleExpanded=()=>reading?readingExpanded:mapFocused?focusExpanded:expanded;
+const visibleExpanded=()=>reading?readingExpanded:expanded;
 function syncSpace(){document.body.style.setProperty('--bottom-ad-space',`${Math.ceil(zone.getBoundingClientRect().height)}px`);}
 function sync(){
- // 모바일 지도 진입에서는 광고를 임시로 접고, 홈으로 돌아가면 기존 선택을 복원한다.
- const nextFocus=mode==='map'&&matchMedia('(max-width:760px)').matches;
- if(nextFocus!==mapFocused){mapFocused=nextFocus;focusExpanded=false;}
  const open=visibleExpanded();panel.hidden=!open;zone.dataset.expanded=String(open);
  zone.setAttribute('aria-label',mode==='list'?'목록 하단 광고':'지도 하단 광고');
  button.setAttribute('aria-expanded',String(open));button.textContent=open?'광고 접기':'광고 펼치기';
@@ -24,7 +21,6 @@ export function syncBottomAd(nextMode,mountAd){
   host=document.createElement('div');host.id='bottomAdHost';panel.append(host);zone.append(button,panel);document.body.append(zone);
   button.onclick=()=>{
    if(reading)readingExpanded=!visibleExpanded();
-   else if(mapFocused)focusExpanded=!focusExpanded;
    else{expanded=!expanded;try{sessionStorage.setItem(storageKey,expanded?'0':'1');}catch{}}
    sync();
   };
