@@ -15,10 +15,11 @@ const fs=require('node:fs');
    await page.waitForFunction(()=>!!document.querySelector('#map img')&&document.querySelector('#mapError').hidden);
    if(width<=760){
     assert.equal(await page.locator('#mobileResultsSheet').isVisible(),false,'map opens without a list');
-    assert.equal(await page.locator('#bottomAdPanel').isVisible(),false,'map ad temporarily collapsed');
+    assert.equal(await page.locator('#bottomAdPanel').isVisible(),true,'map ad expanded by default');
     assert.ok(await page.evaluate(()=>{
      const search=document.querySelector('#searchForm').getBoundingClientRect(),dock=document.querySelector('.mobile-nav').getBoundingClientRect();
-     return dock.top-search.bottom>=innerHeight*(innerHeight<550?.45:.6);
+     const availableHeight=innerHeight-document.querySelector('#bottomAd').getBoundingClientRect().height;
+     return dock.top-search.bottom>=availableHeight*(innerHeight<550?.45:.6);
     }),'map has sufficient unobstructed vertical space');
     for(const id of ['mapHome','mapTypeToggle','filterToggle','navMap','navSaved','navMore','mapLayer','locate','zoomIn','zoomOut','fit'])await reachable('#'+id);
     await page.screenshot({path:`test-results/map-focus-${width}-${height}.png`});
@@ -41,7 +42,7 @@ const fs=require('node:fs');
     await page.locator('#mapEmptyNotice').click();
     await page.waitForFunction(()=>document.querySelectorAll('.center-card').length>0);
     await page.locator('#q').fill('광명');await page.locator('#q').press('Enter');
-    await page.locator('.bottom-ad-toggle').click();await page.waitForTimeout(250);await reachable('#navMap');
+    if(await page.locator('.bottom-ad-toggle').getAttribute('aria-expanded')!=='true')await page.locator('.bottom-ad-toggle').click();await page.waitForTimeout(250);await reachable('#navMap');
     await page.locator('#navMap').click();await page.waitForTimeout(250);await reachable('#readingToggle');
     assert.ok(await page.evaluate(()=>document.querySelector('.mobile-nav').getBoundingClientRect().bottom<=document.querySelector('#bottomAd').getBoundingClientRect().top));
     await page.locator('#navMap').click();await page.locator('.bottom-ad-toggle').click();
