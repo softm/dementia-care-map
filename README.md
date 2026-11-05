@@ -15,6 +15,12 @@ npm run serve
 
 `http://localhost:3100`을 엽니다. 기본 MASTER는 형제 디렉터리 `homecare-nationwide-care-services-map`입니다. 다른 경로는 `python3 scripts/sync_data.py --master /absolute/master/path`로 지정합니다.
 
+## 치매 생활정보
+
+주 메뉴의 **생활정보**와 모바일 지도의 **더보기 → 치매 생활정보**에서 [생활 안내서](public/life-guide.html)를 엽니다. 예방수칙 3·3·3, 기억 변화와 검진, 가족 돌봄, 실종 대응, 비용·지역 지원을 주제별 주소(예: `life-guide.html#screening`)로 공유할 수 있습니다. 검진과 가족지원 안내는 해당 프로그램으로 필터링한 센터 목록으로 연결됩니다.
+
+안내서는 센터 데이터와 별도로 편집하는 정적 문서입니다. 내용을 갱신할 때는 해당 주제 아래의 공공기관 원문을 확인하고 페이지 하단의 자료 확인일을 갱신합니다. 지자체 사례는 지역명을 밝히고, 개별 센터의 지원 여부는 추정하지 않습니다. 빌드·서버 실행 후 `node tests/life-guide-browser.cjs`로 모바일·큰글씨, 주제 주소와 센터 검색 연결을 검증합니다.
+
 ## 데이터의 유일한 원본
 
 - 돌봄한눈 `source-data/dementia/`: 두 공식 원본·출처·영구 ID 대응표·비교 보고서.
