@@ -6,6 +6,7 @@ export function initializeGuide(){
  <div class="guide-intro"><span class="guide-mode-label">쉽게 읽는 이용 안내</span><button id="guideLargeText" type="button" aria-pressed="false">큰글씨로 보기</button></div>
  <h2 id="guideTitle">처음 오셨나요?<br>차근차근 함께 찾아보세요.</h2>
  <section class="guide-call"><span>치매에 대해 궁금한 점이 있다면</span><h3>치매상담콜센터</h3><strong>1899-9988</strong><a href="tel:18999988">${icon('phone')} 전화로 상담 문의하기</a><a class="guide-call-source" href="https://www.korea.kr/news/policyNewsView.do?newsId=148930507" target="_blank" rel="noopener">상담 안내 출처 · 정책브리핑 ↗</a></section>
+ <p><a class="primary-link" href="life-guide.html">예방·검진·돌봄 생활정보 보기 ${icon('chevron')}</a></p>
  <section class="guide-section"><h3>${icon('list')} 센터 이용, 쉬운 3단계</h3>
  <div class="guide-step"><b>1</b><div><span class="guide-step-label">1단계 · 찾기</span><h4>우리 동네 센터 찾기</h4><p>지역이나 센터 이름으로 검색하세요. 위치를 허용하면 현재 위치 주변을 살펴볼 수 있습니다.</p><button id="guideFind" type="button">${icon('locate')} 내 주변 센터 찾기</button></div></div>
  <div class="guide-step"><b>2</b><div><span class="guide-step-label">2단계 · 문의</span><h4>방문 전 전화로 확인하기</h4><p>센터 상세의 전화번호로 연락해 예약 여부, 이용 대상, 비용과 방문 시간을 확인하세요.</p><p class="guide-tip">헛걸음하지 않도록 출발 전에 확인하세요.</p></div></div>

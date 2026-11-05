@@ -1,7 +1,7 @@
 import {initializeMapExperience} from './mobile-map-experience.js?v=20261007';
-import {initializeLayout} from './stitch-layout.js?v=20261013-support-inquiry';
+import {initializeLayout} from './stitch-layout.js?v=20261105-life-guide';
 import {initializeMobileSheet,revealMobileSheet} from './mobile-sheet.js?v=20261007-map';
-import {initializeStitchUI,syncStitchLayout} from './stitch-ui.js?v=20261007-map';
+import {initializeStitchUI,syncStitchLayout} from './stitch-ui.js?v=20261105-life-guide';
 import {icon as uiIcon,labelButton,enhanceDetail} from './ui-icons.js?v=20261003-review';
 import {mountAd,syncAds} from './care-ads.js?v=20261022-default-expanded';
 import './map-marker-placement.js';
