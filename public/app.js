@@ -21,6 +21,7 @@ function getDetail(id){if(!detailCache.has(id))detailCache.set(id,loadJSON(`data
 function directionsURL(row){return `https://map.naver.com/p/search/${encodeURIComponent(row.name+' '+row.address)}`;}
 async function callCenter(id,button){button.disabled=true;try{const center=await getDetail(id);const phone=center.phone.replace(/[^\d+]/g,'');if(phone)location.href=`tel:${phone}`;else toast('연락처 미확인입니다. 상세정보의 공식 출처를 확인하세요.');}catch{toast('연락처를 불러오지 못했습니다. 다시 시도해 주세요.');}finally{button.disabled=false;}}
 let mapDataReady=false,pendingLocation=null,mapSetupPromise,modeRevision=0,mapView=null;
+const INITIAL_LOCATION_ZOOM=11;
 const isList=()=>state.mode==='list';
 function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,4500);}
 function controls(){ $('q').value=state.q;$('province').value=state.province;cities();$('city').value=state.city;$('program').value=state.program;document.querySelectorAll('[data-type]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.type===state.type))); }
@@ -40,12 +41,7 @@ function icon(row){
   const detail=row.programTags.length?row.programTags.join(' · '):'프로그램 미확인';
   return {content:`<div class="named-marker ${active?'active':''} ${row.id===scrollFocusId?'scroll-focused':''}" data-marker-id="${esc(row.id)}"><div class="marker-name"><span class="care-marker-title">${esc(row.name)}</span><span class="care-marker-fact care-marker-overview">${esc(overview)}</span><span class="care-marker-fact care-marker-detail">${esc(detail)}</span></div><button type="button" aria-label="${esc(row.name)}" class="map-pin ${row.type} ${active?'active':''}"><b>${markerLabel}</b></button></div>`,size:new naver.maps.Size(active?43:30,active?43:30),anchor:new naver.maps.Point(active?21:15,active?43:30)};
 }
-function selectMapCenter(id){
- if(id===(scrollFocusId||selected)){void openDetail(id,true);return;}
- clearScrollFocus();
- selected=id;pageSize=Math.max(pageSize,visible.findIndex(row=>row.id===id)+1);revealMobileResults();render();
- const card=[...document.querySelectorAll('.center-card')].find(el=>el.dataset.id===id);if(card)card.scrollIntoView({block:'nearest',inline:'start',behavior:'smooth'});
-}
+function selectMapCenter(id){void openDetail(id,true);}
 // 돌봄한눈처럼 지도 옆 목록을 직접 스크롤할 때만 현재 카드를 따라간다.
 function initializeScrollFocus(){
  const list=$('results');let frame=0,userUntil=0;
@@ -164,7 +160,7 @@ function applyPendingLocation(){
   const {point,request}=pendingLocation;pendingLocation=null;
   if(request!==locationRequest)return;
   userPosition=point;state.province='';state.city='';controls();
-  if(map){internal(()=>setView(point,14));if(userMarker)userMarker.setMap(null);userMarker=new naver.maps.Marker({map,position:latLng(point),title:'현재 위치',zIndex:5000,icon:{content:'<div class="current-position-pin" aria-label="현재 위치"></div>',anchor:new naver.maps.Point(11,11)}});viewBounds=true;}
+  if(map){internal(()=>setView(point,INITIAL_LOCATION_ZOOM));if(userMarker)userMarker.setMap(null);userMarker=new naver.maps.Marker({map,position:latLng(point),title:'현재 위치',zIndex:5000,icon:{content:'<div class="current-position-pin" aria-label="현재 위치"></div>',anchor:new naver.maps.Point(11,11)}});viewBounds=true;}
   render();toast('현재 위치를 기준으로 센터를 찾았습니다.');
 }
 async function locate(initial=false){
@@ -225,7 +221,7 @@ async function setMode(next){
  state.mode=next;viewBounds=false;pageSize=40;syncModeUI();
  if(!isList()){
   await setupMap();if(revision!==modeRevision||isList())return;
-  if(map){internal(()=>naver.maps.Event.trigger(map,'resize'));if(mapView&&mapView.query===[state.q,state.province,state.city].join('|')){internal(()=>setView(mapView.point,mapView.zoom));viewBounds=mapView.scope;}else if(state.location&&!state.q&&!state.province&&!state.city){internal(()=>setView(state.location,state.zoom));viewBounds=state.scope!=='all';}else if(!state.q&&!state.province&&!state.city&&userPosition){internal(()=>setView(userPosition,14));viewBounds=true;}else fitRows(filterCenters(rows,state));}
+  if(map){internal(()=>naver.maps.Event.trigger(map,'resize'));if(mapView&&mapView.query===[state.q,state.province,state.city].join('|')){internal(()=>setView(mapView.point,mapView.zoom));viewBounds=mapView.scope;}else if(state.location&&!state.q&&!state.province&&!state.city){internal(()=>setView(state.location,state.zoom));viewBounds=state.scope!=='all';}else if(!state.q&&!state.province&&!state.city&&userPosition){internal(()=>setView(userPosition,INITIAL_LOCATION_ZOOM));viewBounds=true;}else fitRows(filterCenters(rows,state));}
  }
  render();$('results').scrollTop=0;
  // 목록에서 처음 지도를 열 때만 권한을 요청하며, 직접 검색한 지역은 유지한다.
