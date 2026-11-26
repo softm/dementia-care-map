@@ -11,7 +11,7 @@ import {SUPPORT_GUIDE_URL,SUPPORT_GUIDE_YEAR} from './support-services.js?v=2026
 
 // SOFTM-DEMENTIA-APP START 날짜:20261001 : 데이터·현재 검색·선택 센터 상태를 분리해 늦은 응답이 화면을 덮지 않도록 한다.
 const $=id=>document.getElementById(id);
-let state=readState(location.search),rows=[],visible=[],manifest,map,selected='',pageSize=40,viewBounds=false,internalMove=false,userMapMove=false,userPosition=null,userMarker,detailRequest=0,locationRequest=0,toastTimer;
+let state=readState(location.search),rows=[],visible=[],manifest,map,selected='',nearestHighlightId='',pageSize=40,viewBounds=false,internalMove=false,userMapMove=false,userPosition=null,userMarker,detailRequest=0,locationRequest=0,toastTimer;
 const markers=new Map();
 let scrollFocusId='',scrollIgnoreUntil=0;
 function clearScrollFocus(){scrollFocusId='';scrollIgnoreUntil=Date.now()+350;document.querySelectorAll('.scroll-current').forEach(card=>{card.classList.remove('scroll-current');card.removeAttribute('aria-current');});}
@@ -30,12 +30,14 @@ function viewport(){if(!map)return null;const b=map.getBounds();return {south:b.
 function currentPoint(){if(!map)return null;try{const p=map.getCenter();return p?{lat:p.lat(),lng:p.lng()}:null;}catch{return null;}}
 function saveURL(){const next=stateURL({...state,scope:viewBounds?'map':'all',location:currentPoint()||state.location,zoom:map?.getZoom()||state.zoom},location.origin);if(selected)next.searchParams.set('center',selected);history.replaceState(null,'',next);}
 function internal(fn){internalMove=true;userMapMove=false;try{fn();}finally{internalMove=false;}}
+function highlightedCenterId(){return scrollFocusId||selected||nearestHighlightId;}
+function nearestCenter(point,list=rows){return list.filter(row=>validLocation(row.location)).reduce((nearest,row)=>!nearest||distance(point,row.location)<distance(point,nearest.location)?row:nearest,null);}
 // 돌봄한눈과 같은 네이버 Maps SDK·HTML 마커 API를 사용한다.
 const latLng=point=>new naver.maps.LatLng(point.lat,point.lng);
 function setView(point,zoom){map.setCenter(latLng(point));map.setZoom(zoom,false);}
 function fitRows(list){const points=list.filter(r=>validLocation(r.location));if(!map||isList()||!points.length)return;const bounds=new naver.maps.LatLngBounds();points.forEach(r=>bounds.extend(latLng(r.location)));internal(()=>{map.fitBounds(bounds,{top:70,right:55,bottom:60,left:55});if(map.getZoom()>13)map.setZoom(13,false);});}
 function icon(row){
-  const active=row.id===(scrollFocusId||selected);
+  const active=row.id===highlightedCenterId();
   const markerLabel=({center:'안심',regional:'광역',branch:'분소',other:'기타'})[row.type]||'미확인';
   const overview=[TYPES[row.type],row.province,row.city].filter(Boolean).join(' · ');
   const detail=row.programTags.length?row.programTags.join(' · '):'프로그램 미확인';
@@ -73,7 +75,7 @@ function updateMarkers(list){if(!map||isList())return;
   const count=list.filter(row=>validLocation(row.location)&&row.location.lat>=bounds.south&&row.location.lat<=bounds.north&&row.location.lng>=bounds.west&&row.location.lng<=bounds.east).length;
   const limit=Math.max(12,Math.min(80,Math.floor(host.clientWidth*host.clientHeight/9000)));
   host.classList.toggle('care-compact-markers',count>limit);
-  const ids=new Set(list.map(r=>r.id));for(const [id,marker] of markers){if(!ids.has(id)){marker.setMap(null);naver.maps.Event.clearInstanceListeners(marker);markers.delete(id);}}list.forEach((row,i)=>{if(!validLocation(row.location))return;let marker=markers.get(row.id);if(!marker){marker=new naver.maps.Marker({map,position:latLng(row.location),icon:icon(row),title:row.name});naver.maps.Event.addListener(marker,'click',()=>selectMapCenter(row.id));markers.set(row.id,marker);}else marker.setIcon(icon(row));marker.setZIndex(row.id===(scrollFocusId||selected)?4500:1);});}
+  const ids=new Set(list.map(r=>r.id));for(const [id,marker] of markers){if(!ids.has(id)){marker.setMap(null);naver.maps.Event.clearInstanceListeners(marker);markers.delete(id);}}list.forEach((row,i)=>{if(!validLocation(row.location))return;let marker=markers.get(row.id);if(!marker){marker=new naver.maps.Marker({map,position:latLng(row.location),icon:icon(row),title:row.name});naver.maps.Event.addListener(marker,'click',()=>selectMapCenter(row.id));markers.set(row.id,marker);}else marker.setIcon(icon(row));marker.setZIndex(row.id===highlightedCenterId()?4500:1);});}
 function renderResults(markup){
   const host=$('results'),ad=host.querySelector('[data-placement="inline"]');
   for(const child of [...host.children])if(child!==ad&&!['listTopAd','mapTopAd'].includes(child.id))child.remove();
@@ -95,7 +97,7 @@ function render(){
   $('mapLabel').textContent=[state.province||'전국',state.city,TYPES[state.type]||'치매센터'].filter(Boolean).join(' ');
   if(!visible.length){renderResults('<div class="empty"><strong>찾은 센터가 없습니다.</strong><br>검색어나 지역·지도 범위를 넓혀 보세요.<br><button id="emptyReset">전체 센터 보기</button></div>');$('emptyReset').onclick=reset;}
   else{
-    renderResults(visible.slice(0,pageSize).map((r,index)=>{const d=base?distance(base,r.location):Infinity;return `<article class="center-card ${r.id===selected?'selected':''} ${r.id===scrollFocusId?'scroll-current':''}" ${r.id===scrollFocusId?'aria-current="true"':''} data-id="${esc(r.id)}"><div class="card-top"><span class="badge ${r.type}">${TYPES[r.type]}</span><span class="status-unknown">운영시간 미확인</span><button class="save-center" data-save="${esc(r.id)}" aria-label="${esc(r.name)} 즐겨찾기" aria-pressed="${saved.has(r.id)}">${uiIcon('heart')}</button></div><button type="button" class="card-open" aria-label="${esc(r.name)} 상세정보"><div class="card-heading"><h3>${esc(r.name)}</h3></div><p class="card-address">${uiIcon('pin')}<span>${esc(r.address)||'주소 미확인'}</span></p><span class="distance">${Number.isFinite(d)?`직선 ${d.toFixed(1)}km`:!r.location?'위치 미확인':''}</span><div class="tags"><strong>공개 프로그램 정보</strong>${r.programTags.length?r.programTags.map(t=>`<span>${esc(t)}</span>`).join(''):'<span>미확인 · 센터에 문의하세요</span>'}</div></button><div class="card-actions"><button type="button" data-card-call="${esc(r.id)}">${uiIcon('phone')}<span>전화걸기</span></button><a href="${esc(directionsURL(r))}" target="_blank" rel="noopener">${uiIcon('map')}<span>길찾기</span></a><button type="button" data-card-detail="${esc(r.id)}">${uiIcon('info')}<span>상세보기</span></button></div><button class="card-map-link" data-card-map="${esc(r.id)}">${uiIcon('pin')} 지도에서 보기</button></article>`;}).join('')+(visible.length>pageSize?`<button class="more" id="more">센터 더 보기 (${Math.min(pageSize,visible.length)} / ${visible.length})</button>`:''));
+    renderResults(visible.slice(0,pageSize).map((r,index)=>{const d=base?distance(base,r.location):Infinity;const nearest=r.id===nearestHighlightId;return `<article class="center-card ${r.id===selected?'selected':''} ${r.id===scrollFocusId?'scroll-current':''} ${nearest?'nearest-center':''}" ${(r.id===scrollFocusId||nearest&&!selected)?'aria-current="true"':''} data-id="${esc(r.id)}"><div class="card-top"><span class="badge ${r.type}">${TYPES[r.type]}</span>${nearest?'<span class="nearest-badge">내 위치에서 가장 가까움</span>':'<span class="status-unknown">운영시간 미확인</span>'}<button class="save-center" data-save="${esc(r.id)}" aria-label="${esc(r.name)} 즐겨찾기" aria-pressed="${saved.has(r.id)}">${uiIcon('heart')}</button></div><button type="button" class="card-open" aria-label="${esc(r.name)} 상세정보"><div class="card-heading"><h3>${esc(r.name)}</h3></div><p class="card-address">${uiIcon('pin')}<span>${esc(r.address)||'주소 미확인'}</span></p><span class="distance">${Number.isFinite(d)?`직선 ${d.toFixed(1)}km`:!r.location?'위치 미확인':''}</span><div class="tags"><strong>공개 프로그램 정보</strong>${r.programTags.length?r.programTags.map(t=>`<span>${esc(t)}</span>`).join(''):'<span>미확인 · 센터에 문의하세요</span>'}</div></button><div class="card-actions"><button type="button" data-card-call="${esc(r.id)}">${uiIcon('phone')}<span>전화걸기</span></button><a href="${esc(directionsURL(r))}" target="_blank" rel="noopener">${uiIcon('map')}<span>길찾기</span></a><button type="button" data-card-detail="${esc(r.id)}">${uiIcon('info')}<span>상세보기</span></button></div><button class="card-map-link" data-card-map="${esc(r.id)}">${uiIcon('pin')} 지도에서 보기</button></article>`;}).join('')+(visible.length>pageSize?`<button class="more" id="more">센터 더 보기 (${Math.min(pageSize,visible.length)} / ${visible.length})</button>`:''));
     $('results').querySelectorAll('.center-card').forEach(card=>card.onclick=async event=>{
       const id=card.dataset.id;
       if(event.target.closest('a'))return;
@@ -108,8 +110,8 @@ function render(){
   }
   updateMarkers(visible);saveURL();syncAds(isList()?'list':'map');renderSummary();
 }
-function search(){clearScrollFocus();locationRequest++;state={...state,q:$('q').value.trim(),province:$('province').value,city:$('city').value,program:$('program').value};viewBounds=false;pageSize=40;controls();fitRows(filterCenters(rows,state));render();$('results').scrollTop=0;}
-function reset(){clearScrollFocus();savedOnly=false;locationRequest++;if(userMarker){userMarker.setMap(null);userMarker=null;}state={...state,q:'',type:'',province:'',city:'',program:''};controls();viewBounds=false;userPosition=null;pageSize=40;fitRows(rows);render();}
+function search(){clearScrollFocus();nearestHighlightId='';locationRequest++;state={...state,q:$('q').value.trim(),province:$('province').value,city:$('city').value,program:$('program').value};viewBounds=false;pageSize=40;controls();fitRows(filterCenters(rows,state));render();$('results').scrollTop=0;}
+function reset(){clearScrollFocus();nearestHighlightId='';savedOnly=false;locationRequest++;if(userMarker){userMarker.setMap(null);userMarker=null;}state={...state,q:'',type:'',province:'',city:'',program:''};controls();viewBounds=false;userPosition=null;pageSize=40;fitRows(rows);render();}
 async function share(url,title){try{if(navigator.share){await navigator.share({title,url:String(url)});return;}await navigator.clipboard.writeText(String(url));toast('링크를 복사했습니다.');}catch(e){if(e.name==='AbortError')return;try{await navigator.clipboard.writeText(String(url));toast('링크를 복사했습니다.');}catch{toast('공유 링크를 복사해 주세요.');const input=document.createElement('input');input.value=String(url);input.setAttribute('aria-label','복사할 공유 링크');input.style.cssText='width:100%;padding:12px';($('detailDialog').open?$('detailBody'):$('searchForm')).append(input);input.focus();input.select();}}}
 function closeDetail(){clearScrollFocus();detailRequest++;selected='';state.center='';if($('detailDialog').open)$('detailDialog').close();updateMarkers(visible);document.querySelectorAll('.center-card.selected').forEach(b=>b.classList.remove('selected'));saveURL();}
 function supportInquiryMarkup(phone){
@@ -159,9 +161,9 @@ function applyPendingLocation(){
   if(!mapDataReady||!pendingLocation||isList())return;
   const {point,request}=pendingLocation;pendingLocation=null;
   if(request!==locationRequest)return;
-  userPosition=point;state.province='';state.city='';controls();
+  userPosition=point;state.province='';state.city='';nearestHighlightId=nearestCenter(point)?.id||'';controls();
   if(map){internal(()=>setView(point,INITIAL_LOCATION_ZOOM));if(userMarker)userMarker.setMap(null);userMarker=new naver.maps.Marker({map,position:latLng(point),title:'현재 위치',zIndex:5000,icon:{content:'<div class="current-position-pin" aria-label="현재 위치"></div>',anchor:new naver.maps.Point(11,11)}});viewBounds=true;}
-  render();toast('현재 위치를 기준으로 센터를 찾았습니다.');
+  render();const nearest=rows.find(row=>row.id===nearestHighlightId);toast(nearest?`가장 가까운 ${nearest.name}을 표시했습니다.`:'현재 위치를 기준으로 센터를 찾았습니다.');
 }
 async function locate(initial=false){
   const request=++locationRequest;$('locate').disabled=true;labelButton('locate','locate','위치 확인 중…');$('locate').setAttribute('aria-busy','true');CareLocation.hideNotice();

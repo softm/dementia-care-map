@@ -17,7 +17,8 @@ body #results .card-actions [data-card-call]{background:#ad491f!important;color:
 body #results .card-actions>a{background:#004840!important;color:#fff!important}
 body #results .card-actions [data-card-detail]{background:#eaf2ee!important;color:#004840!important}
 body #results .card-actions .ui-icon{width:21px;height:21px;flex:0 0 21px}
-body #results .center-card:is(.selected,.scroll-current){border-color:#175cb5;box-shadow:0 0 0 2px #175cb529,0 4px 16px #0f615710}
+body #results .center-card:is(.selected,.scroll-current,.nearest-center){border-color:#175cb5;box-shadow:0 0 0 2px #175cb529,0 4px 16px #0f615710}
+.nearest-badge{display:inline-flex;align-items:center;min-height:24px;padding:3px 8px;border-radius:999px;background:#e7f0ff;color:#084baf;font-size:10px;font-weight:800;line-height:1.25}
 @media(max-width:760px){body[data-care-mode=map] #results .center-card{padding:14px;border-radius:18px}body[data-care-mode=map] #results .card-top{margin-bottom:6px;gap:5px}body[data-care-mode=map] #results .card-heading h3{font-size:19px;margin-bottom:6px}body[data-care-mode=map] #results .card-actions{margin-top:10px;gap:6px}body[data-care-mode=map] #results .card-actions>*{min-height:48px;flex-direction:row;font-size:12px!important}body[data-care-mode=map] #results .card-actions .ui-icon{width:16px;height:16px;flex-basis:16px}}
 body.large-text #results .card-heading h3{font-size:28px}body.large-text #results .card-address,body.large-text #results .tags span{font-size:20px!important}body.large-text #results .card-actions{grid-template-columns:1fr}body.large-text #results .card-actions>*{font-size:22px!important;min-height:62px}
 /* 지도 옆 목록은 큰글씨에서도 한 카드가 목록 전체를 차지하지 않도록 구성. */
