@@ -10,7 +10,9 @@ const origin=process.env.TEST_ORIGIN||'http://localhost:3100';
   page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(new URL(r.url()).pathname.startsWith('/data/'))dataRequests.push(r.url());});
   const checks=[];
   try{
-    await page.goto(origin);await page.waitForFunction(()=>document.querySelector('#sortLabel').textContent==='직선거리순');assert.ok(Math.abs(Number(new URL(page.url()).searchParams.get('lat'))-37.4785)<0.001);await page.locator('#reset').click();await page.locator('.center-card').first().waitFor();
+    await page.goto(origin);await page.waitForFunction(()=>document.querySelector('#sortLabel').textContent==='직선거리순');assert.ok(Math.abs(Number(new URL(page.url()).searchParams.get('lat'))-37.4785)<0.001);
+    assert.equal(await page.locator('.center-card.nearest-center').count(),1);assert.equal(await page.locator('.named-marker.active').count(),1);assert.equal(await page.locator('.center-card.nearest-center').getAttribute('data-id'),await page.locator('.named-marker.active').getAttribute('data-marker-id'));assert.equal(new URL(page.url()).searchParams.has('center'),false);checks.push('첫 진입 시 현재 위치 최인접 센터 자동 부각');
+    await page.locator('#reset').click();await page.locator('.center-card').first().waitFor();
     const total=Number(await page.locator('#count').innerText());assert.ok(total>250);
     const expected=await (await context.request.get(origin+'/data/dementia/manifest.json')).json();assert.equal(total,expected.count);
     assert.equal(dataRequests.length,2);assert.ok(dataRequests.every(u=>new URL(u).origin===origin));checks.push('초기 데이터 요청 2개, 자체 Origin');
