@@ -28,7 +28,12 @@ function controls(){ $('q').value=state.q;$('province').value=state.province;cit
 function cities(){const choices=[...new Set(rows.filter(r=>!state.province||r.province===state.province).map(r=>r.city).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko'));$('city').innerHTML='<option value="">전체 시군구</option>'+choices.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');}
 function viewport(){if(!map)return null;const b=map.getBounds();return {south:b.getSW().lat(),north:b.getNE().lat(),west:b.getSW().lng(),east:b.getNE().lng()};}
 function currentPoint(){if(!map)return null;try{const p=map.getCenter();return p?{lat:p.lat(),lng:p.lng()}:null;}catch{return null;}}
-function saveURL(){const next=stateURL({...state,scope:viewBounds?'map':'all',location:currentPoint()||state.location,zoom:map?.getZoom()||state.zoom},location.origin);if(selected)next.searchParams.set('center',selected);history.replaceState(null,'',next);}
+function saveURL(){
+  // 초기 위치를 얻기 전 전국 맞춤 지도의 임시 중심은 공유·사용자 위치가 아니다.
+  // 이를 URL에 쓰면 새로고침 때 공유 좌표로 오인해 자동 위치 조회를 건너뛴다.
+  const locationToSave=viewBounds||userPosition||state.location?currentPoint()||state.location:null;
+  const next=stateURL({...state,scope:viewBounds?'map':'all',location:locationToSave,zoom:map?.getZoom()||state.zoom},location.origin);if(selected)next.searchParams.set('center',selected);history.replaceState(null,'',next);
+}
 function internal(fn){internalMove=true;userMapMove=false;try{fn();}finally{internalMove=false;}}
 function highlightedCenterId(){return scrollFocusId||selected||nearestHighlightId;}
 function nearestCenter(point,list=rows){return list.filter(row=>validLocation(row.location)).reduce((nearest,row)=>!nearest||distance(point,row.location)<distance(point,nearest.location)?row:nearest,null);}
